@@ -1,1 +1,3298 @@
-hello world
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mexican Train Dominoes - Enhanced</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            touch-action: manipulation;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 2px solid #f8c291;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .game-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 12px;
+            width: min(100%, 1400px);
+            margin: 0 auto;
+        }
+        
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        .player-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            border-radius: 8px;
+            transition: background 0.3s ease;
+        }
+        
+        .player-info.current-player {
+            background: rgba(248, 194, 145, 0.2);
+            border: 2px solid #f8c291;
+        }
+        
+        .player-name {
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+        
+        .player-status {
+            font-size: 0.9rem;
+            color: #f8c291;
+        }
+        
+        .game-board {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .train-container {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .train-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .train-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        .train-marker {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #f8c291;
+            transition: background 0.3s ease;
+        }
+        
+        .train {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            min-height: 80px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 10px;
+        }
+        
+        .domino {
+            width: 60px;
+            height: 30px;
+            background: #fff;
+            border: 1px solid #333;
+            border-radius: 5px;
+            display: flex;
+            color: #333;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            min-height: 44px;
+            min-width: 60px;
+        }
+        
+        .domino.selected {
+            transform: translateY(-10px);
+            box-shadow: 0 0 15px #f8c291;
+            border: 2px solid #f8c291;
+        }
+        
+        .domino:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .domino.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+            transform: rotate(5deg) scale(1.1);
+        }
+        
+        .domino.ai-play {
+            animation: aiPlay 0.8s ease-out;
+        }
+        
+        @keyframes aiPlay {
+            0% {
+                transform: scale(0) rotate(180deg);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.3) rotate(90deg);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+        
+        .domino-half {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        
+        .domino-half:first-child {
+            border-right: 1px solid #333;
+        }
+        
+        .player-hand {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .hand-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .hand-dominoes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .hand-dominoes .domino {
+            width: 70px;
+            height: 40px;
+            min-height: 44px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            background: #f8c291;
+            color: #1a2a6c;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+            min-height: 44px;
+            min-width: 44px;
+        }
+        
+        button:hover {
+            background: #e58e26;
+        }
+        
+        button:disabled {
+            background: #555;
+            color: #999;
+            cursor: not-allowed;
+        }
+        
+        .boneyard-count {
+            color: #f8c291;
+            font-weight: bold;
+            margin-left: auto;
+        }
+        
+        .message-log {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            height: 200px;
+            overflow-y: auto;
+        }
+        
+        .message {
+            margin-bottom: 8px;
+            padding: 5px;
+            border-radius: 5px;
+        }
+        
+        .message:last-child {
+            background: rgba(255, 255, 255, 0.2);
+            font-weight: bold;
+        }
+        
+        .message.zoe {
+            background: rgba(255, 99, 71, 0.3);
+        }
+        
+        .message.alex {
+            background: rgba(30, 144, 255, 0.3);
+        }
+        
+        .message.sophia {
+            background: rgba(147, 112, 219, 0.3);
+        }
+        
+        .message.system {
+            background: rgba(255, 215, 0, 0.3);
+            font-weight: bold;
+            font-size: 1rem;
+        }
+        
+        .train-container.highlight {
+            border-color: #f8c291;
+            box-shadow: 0 0 15px rgba(248, 194, 145, 0.5);
+        }
+        
+        .train-container.drag-over {
+            border-color: #4CAF50;
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.7);
+            background: rgba(76, 175, 80, 0.1);
+        }
+        
+        .game-over-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: #1a2a6c;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            width: min(90vw, 600px);
+            border: 2px solid #f8c291;
+        }
+        
+        .modal-content h2 {
+            margin-bottom: 20px;
+            color: #f8c291;
+        }
+        
+        .modal-content button {
+            margin-top: 20px;
+        }
+        
+        .train-container.clickable {
+            cursor: pointer;
+        }
+        
+        .train-container.clickable:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .train-container.disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        .rules-info {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+        
+        .train-status {
+            display: flex;
+            align-items: center;
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+            background: #f8c291;
+        }
+        
+        .status-dot.inactive {
+            background: transparent;
+            border: 1px solid #f8c291;
+        }
+        
+        .engine-display {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 20px;
+        }
+        
+        .engine-tile {
+            width: 60px;
+            height: 30px;
+            background: #fff;
+            border: 2px solid #f8c291;
+            border-radius: 5px;
+            display: flex;
+            color: #333;
+            font-weight: bold;
+        }
+        
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            z-index: 100;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+        }
+        
+        .train-container:hover .tooltip {
+            opacity: 1;
+        }
+        
+        .shake {
+            animation: shake 0.5s;
+            animation-iteration-count: 1;
+        }
+        
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+        
+        .double-cover-banner {
+            background: rgba(255, 99, 71, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            margin-bottom: 15px;
+            font-weight: bold;
+            display: none;
+        }
+        
+        .helper-text {
+            font-size: 0.9rem;
+            color: #f8c291;
+            margin-top: 5px;
+            text-align: center;
+            font-style: italic;
+        }
+        
+        .confirm-dialog {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #1a2a6c;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #f8c291;
+            z-index: 1001;
+            display: none;
+            text-align: center;
+        }
+        
+        .confirm-dialog h3 {
+            margin-bottom: 15px;
+            color: #f8c291;
+        }
+        
+        .confirm-dialog button {
+            margin: 5px;
+        }
+        
+        /* Highlight for double to cover */
+        .double-cover {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(255, 0, 0, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+            }
+        }
+        
+        .score-display {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+        
+        .score-display h3 {
+            margin-bottom: 5px;
+            color: #f8c291;
+        }
+        
+        .score-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 0;
+        }
+        
+        .final-scoreboard {
+            margin-top: 20px;
+        }
+        
+        .final-scoreboard h3 {
+            color: #f8c291;
+            margin-bottom: 10px;
+        }
+        
+        .final-score-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .final-score-item.winner {
+            font-weight: bold;
+            color: #f8c291;
+        }
+        
+        .round-indicator {
+            background: rgba(248, 194, 145, 0.2);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .score-history {
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            text-align: left;
+        }
+        
+        .score-history table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        
+        .score-history th, .score-history td {
+            padding: 4px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .score-history th {
+            color: #f8c291;
+            font-weight: bold;
+            font-size: 0.75rem;
+        }
+        
+        .score-history .total-row {
+            font-weight: bold;
+            border-top: 2px solid #f8c291;
+        }
+        
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+            
+            .domino.ai-play,
+            .shake,
+            .double-cover {
+                animation: none !important;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .game-board {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .game-info {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            
+            .player-info {
+                flex: 1 1 45%;
+            }
+            
+            .controls {
+                flex-wrap: wrap;
+            }
+            
+            .score-history table {
+                font-size: 0.75rem;
+            }
+            
+            .score-history th {
+                font-size: 0.65rem;
+            }
+            
+            button {
+                padding: 14px 18px;
+                font-size: 1rem;
+            }
+            
+            .hand-dominoes .domino {
+                width: 80px;
+                height: 44px;
+                min-height: 44px;
+            }
+            
+            .domino {
+                min-height: 44px;
+            }
+        }
+        
+        @media (max-width: 520px) {
+            .game-board {
+                grid-template-columns: 1fr;
+            }
+            
+            .player-hand .domino {
+                width: 60px;
+                height: 35px;
+            }
+            
+            .controls {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🚂 Mexican Train Dominoes 🚂</h1>
+        <p>Enhanced Version - Fixed Issues & Improved Gameplay</p>
+    </header>
+    
+    <div class="game-container">
+        <div class="rules-info">
+            <strong>Double-12 Variant Rules:</strong> Each round uses a specific engine starting from 12 down to 0. 
+            Start trains with the engine number. After a double is played, the next player must cover it. 
+            When you can't play, draw or pass to open your train to others. Mexican train can be started by anyone matching the engine.
+        </div>
+        
+        <div class="double-cover-banner" id="double-cover-banner">
+            Double <span id="double-value"></span> on <span id="double-train"></span> — must be covered
+        </div>
+        
+        <div class="engine-display">
+            <div class="engine-tile">
+                <div class="domino-half" id="engine-value-left">?</div>
+                <div class="domino-half" id="engine-value-right">?</div>
+            </div>
+            <div class="round-indicator" id="round-indicator">Round 1/13</div>
+        </div>
+        
+        <div class="score-display">
+            <h3>Total Scores</h3>
+            <div id="scores-container"></div>
+        </div>
+        
+        <div class="game-info">
+            <div class="player-info" id="player-0-info">
+                <div class="player-name">You</div>
+                <div class="player-status" id="player-status">0 dominoes</div>
+                <div class="train-status">
+                    <div class="status-dot inactive" id="player-status-dot"></div>
+                    <span id="player-train-status">Closed</span>
+                </div>
+            </div>
+            <div class="player-info" id="player-1-info">
+                <div class="player-name">Zoe</div>
+                <div class="player-status" id="zoe-status">0 dominoes</div>
+                <div class="train-status">
+                    <div class="status-dot inactive" id="zoe-status-dot"></div>
+                    <span id="zoe-train-status">Closed</span>
+                </div>
+            </div>
+            <div class="player-info" id="player-2-info">
+                <div class="player-name">Alex</div>
+                <div class="player-status" id="alex-status">0 dominoes</div>
+                <div class="train-status">
+                    <div class="status-dot inactive" id="alex-status-dot"></div>
+                    <span id="alex-train-status">Closed</span>
+                </div>
+            </div>
+            <div class="player-info" id="player-3-info">
+                <div class="player-name">Sophia</div>
+                <div class="player-status" id="sophia-status">0 dominoes</div>
+                <div class="train-status">
+                    <div class="status-dot inactive" id="sophia-status-dot"></div>
+                    <span id="sophia-train-status">Closed</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="game-board">
+            <div class="train-container clickable" id="player-train-container" data-train="player" 
+                 role="region" aria-label="Your train" tabindex="0">
+                <div class="train-header">
+                    <div class="train-title">Your Train</div>
+                    <div class="train-marker" id="player-marker"></div>
+                </div>
+                <div class="train" id="player-train"></div>
+                <div class="tooltip">Your personal train - always playable when not blocked</div>
+            </div>
+            
+            <div class="train-container clickable" id="zoe-train-container" data-train="zoe" 
+                 role="region" aria-label="Zoe's train" tabindex="0">
+                <div class="train-header">
+                    <div class="train-title">Zoe's Train</div>
+                    <div class="train-marker" id="zoe-marker"></div>
+                </div>
+                <div class="train" id="zoe-train"></div>
+                <div class="tooltip">Zoe's train - only playable when open</div>
+            </div>
+            
+            <div class="train-container clickable" id="alex-train-container" data-train="alex" 
+                 role="region" aria-label="Alex's train" tabindex="0">
+                <div class="train-header">
+                    <div class="train-title">Alex's Train</div>
+                    <div class="train-marker" id="alex-marker"></div>
+                </div>
+                <div class="train" id="alex-train"></div>
+                <div class="tooltip">Alex's train - only playable when open</div>
+            </div>
+            
+            <div class="train-container clickable" id="sophia-train-container" data-train="sophia" 
+                 role="region" aria-label="Sophia's train" tabindex="0">
+                <div class="train-header">
+                    <div class="train-title">Sophia's Train</div>
+                    <div class="train-marker" id="sophia-marker"></div>
+                </div>
+                <div class="train" id="sophia-train"></div>
+                <div class="tooltip">Sophia's train - only playable when open</div>
+            </div>
+        </div>
+        
+        <div class="train-container clickable" id="mexican-train-container" data-train="mexican" 
+             role="region" aria-label="Mexican train" tabindex="0">
+            <div class="train-header">
+                <div class="train-title">Mexican Train</div>
+                <div class="train-marker" id="mexican-marker"></div>
+            </div>
+            <div class="train" id="mexican-train"></div>
+            <div class="tooltip">Public train - anyone can start or play on it</div>
+        </div>
+        
+        <div class="player-hand">
+            <div class="hand-title">Your Hand</div>
+            <div class="hand-dominoes" id="player-hand"></div>
+            <div class="helper-text" id="helper-text"></div>
+        </div>
+        
+        <div class="controls">
+            <button id="play-domino-btn" disabled aria-label="Play selected domino">Play Domino</button>
+            <button id="draw-btn" disabled aria-label="Draw a domino from the boneyard">Draw from Boneyard</button>
+            <button id="pass-btn" disabled aria-label="Pass your turn">Pass Turn</button>
+            <button id="reset-round-btn">Reset Round</button>
+            <button id="rules-btn">Rules</button>
+            <button id="sound-toggle-btn">🔊 Sound On</button>
+            <button id="new-game-btn">New Game</button>
+            <label style="display: flex; align-items: center; gap: 5px;">
+                <input type="checkbox" id="strict-engine-toggle">
+                <span>Strict Engine Rule</span>
+            </label>
+            <div class="boneyard-count" id="boneyard-count">Boneyard: 0</div>
+        </div>
+        
+        <div class="message-log" id="message-log" aria-live="polite" aria-atomic="false"></div>
+    </div>
+    
+    <div class="game-over-modal" id="game-over-modal">
+        <div class="modal-content">
+            <h2 id="game-over-title">Game Over</h2>
+            <div id="game-over-message"></div>
+            <div class="final-scoreboard" id="final-scoreboard" style="display: none;">
+                <h3>Final Scores</h3>
+                <div id="final-scores-container"></div>
+                <div class="score-history" id="score-history">
+                    <h4>Score History</h4>
+                    <table>
+                        <thead>
+                            <tr id="score-history-headers">
+                                <th>Player</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="score-history-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <button id="play-again-btn">Play Again</button>
+        </div>
+    </div>
+    
+    <div class="confirm-dialog" id="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="confirm-message">
+        <h3>Confirm Play</h3>
+        <p id="confirm-message">Play this domino?</p>
+        <div>
+            <button id="confirm-yes">Yes</button>
+            <button id="confirm-no">No</button>
+        </div>
+    </div>
+    
+    <div id="drag-clone" style="position:fixed; left:-9999px; top:-9999px; pointer-events:none; display:none;"></div>
+    
+    <script>
+        // Check for reduced motion preference
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        
+        // Game state
+        const gameState = {
+            players: [
+                { name: 'You', isAI: false, hand: [], train: [], isOpen: false, hasPassed: false, isBlocked: false, score: 0 },
+                { name: 'Zoe', isAI: true, hand: [], train: [], isOpen: false, hasPassed: false, isBlocked: false, score: 0 },
+                { name: 'Alex', isAI: true, hand: [], train: [], isOpen: false, hasPassed: false, isBlocked: false, score: 0 },
+                { name: 'Sophia', isAI: true, hand: [], train: [], isOpen: false, hasPassed: false, isBlocked: false, score: 0 }
+            ],
+            currentPlayerIndex: 0,
+            boneyard: [],
+            mexicanTrain: [],
+            doubleToCover: null,
+            engineNumber: 12, // Start with double-12
+            gameStarted: false,
+            selectedDomino: null,
+            selectedTrain: null,
+            consecutivePasses: 0,
+            mexicanTrainStarted: false,
+            moveInProgress: false,
+            pendingPlay: null,
+            round: 1,
+            totalScores: [0, 0, 0, 0],
+            roundScores: [[0, 0, 0, 0]], // Track scores for each round
+            gameCompleted: false,
+            dragData: {
+                isDragging: false,
+                dominoIndex: null,
+                originalParent: null,
+                originalNextSibling: null,
+                touchOffsetX: 0,
+                touchOffsetY: 0,
+                touchStartX: 0,
+                touchStartY: 0
+            },
+            soundEnabled: true,
+            strictEngine: false,
+            aiDifficulty: 0.7 // 0.7 = normal difficulty (lower = easier)
+        };
+        
+        // DOM elements
+        const playerHandEl = document.getElementById('player-hand');
+        const playerTrainEl = document.getElementById('player-train');
+        const zoeTrainEl = document.getElementById('zoe-train');
+        const alexTrainEl = document.getElementById('alex-train');
+        const sophiaTrainEl = document.getElementById('sophia-train');
+        const mexicanTrainEl = document.getElementById('mexican-train');
+        const messageLogEl = document.getElementById('message-log');
+        const playDominoBtn = document.getElementById('play-domino-btn');
+        const drawBtn = document.getElementById('draw-btn');
+        const passBtn = document.getElementById('pass-btn');
+        const resetRoundBtn = document.getElementById('reset-round-btn');
+        const rulesBtn = document.getElementById('rules-btn');
+        const soundToggleBtn = document.getElementById('sound-toggle-btn');
+        const newGameBtn = document.getElementById('new-game-btn');
+        const gameOverModal = document.getElementById('game-over-modal');
+        const gameOverTitle = document.getElementById('game-over-title');
+        const gameOverMessage = document.getElementById('game-over-message');
+        const playAgainBtn = document.getElementById('play-again-btn');
+        const engineValueLeftEl = document.getElementById('engine-value-left');
+        const engineValueRightEl = document.getElementById('engine-value-right');
+        const doubleCoverBanner = document.getElementById('double-cover-banner');
+        const doubleValueEl = document.getElementById('double-value');
+        const doubleTrainEl = document.getElementById('double-train');
+        const helperTextEl = document.getElementById('helper-text');
+        const boneyardCountEl = document.getElementById('boneyard-count');
+        const confirmDialog = document.getElementById('confirm-dialog');
+        const confirmMessage = document.getElementById('confirm-message');
+        const confirmYesBtn = document.getElementById('confirm-yes');
+        const confirmNoBtn = document.getElementById('confirm-no');
+        const scoresContainer = document.getElementById('scores-container');
+        const finalScoreboard = document.getElementById('final-scoreboard');
+        const finalScoresContainer = document.getElementById('final-scores-container');
+        const roundIndicator = document.getElementById('round-indicator');
+        const scoreHistory = document.getElementById('score-history');
+        const scoreHistoryBody = document.getElementById('score-history-body');
+        const scoreHistoryHeaders = document.getElementById('score-history-headers');
+        const strictEngineToggle = document.getElementById('strict-engine-toggle');
+        
+        // Event listeners
+        playDominoBtn.addEventListener('click', () => {
+            if (gameState.selectedDomino !== null && gameState.selectedTrain !== null) {
+                const domino = gameState.players[0].hand[gameState.selectedDomino];
+                let trainName = '';
+                
+                switch(gameState.selectedTrain) {
+                    case 'player': trainName = 'your'; break;
+                    case 'zoe': trainName = "Zoe's"; break;
+                    case 'alex': trainName = "Alex's"; break;
+                    case 'sophia': trainName = "Sophia's"; break;
+                    case 'mexican': trainName = 'Mexican'; break;
+                }
+                
+                confirmMessage.textContent = `Play [${domino.values.join('|')}] on ${trainName} train?`;
+                openDialog(confirmDialog);
+                
+                gameState.pendingPlay = {
+                    dominoIndex: gameState.selectedDomino,
+                    trainType: gameState.selectedTrain
+                };
+            }
+        });
+        
+        confirmYesBtn.addEventListener('click', () => {
+            closeDialog(confirmDialog);
+            if (gameState.pendingPlay) {
+                gameState.selectedDomino = gameState.pendingPlay.dominoIndex;
+                gameState.selectedTrain = gameState.pendingPlay.trainType;
+                gameState.pendingPlay = null;
+                playSelectedDomino();
+            }
+            updateUI();
+        });
+        
+        confirmNoBtn.addEventListener('click', () => {
+            closeDialog(confirmDialog);
+            gameState.pendingPlay = null;
+            gameState.selectedDomino = null;
+            gameState.selectedTrain = null;
+            updateUI();
+        });
+        
+        drawBtn.addEventListener('click', drawFromBoneyard);
+        passBtn.addEventListener('click', passPlayerTurn);
+        resetRoundBtn.addEventListener('click', resetCurrentRound);
+        rulesBtn.addEventListener('click', showRules);
+        soundToggleBtn.addEventListener('click', toggleSound);
+        newGameBtn.addEventListener('click', startNewGame);
+        playAgainBtn.addEventListener('click', () => {
+            gameOverModal.style.display = 'none';
+            if (gameState.gameCompleted) {
+                startNewGame();
+            } else {
+                startNewRound();
+            }
+        });
+        
+        strictEngineToggle.addEventListener('change', (e) => {
+            gameState.strictEngine = e.target.checked;
+        });
+        
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (gameState.currentPlayerIndex !== 0) return;
+            
+            const dominoElements = Array.from(document.querySelectorAll('.hand-dominoes .domino'));
+            const trainElements = Array.from(document.querySelectorAll('.train-container:not(.disabled)'));
+            
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                
+                if (dominoElements.length === 0) return;
+                
+                const currentIndex = gameState.selectedDomino !== null ? gameState.selectedDomino : -1;
+                let newIndex;
+                
+                if (e.key === 'ArrowLeft') {
+                    newIndex = currentIndex <= 0 ? dominoElements.length - 1 : currentIndex - 1;
+                } else {
+                    newIndex = currentIndex >= dominoElements.length - 1 ? 0 : currentIndex + 1;
+                }
+                
+                selectDomino(newIndex);
+                dominoElements[newIndex].focus();
+            } 
+            else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                
+                if (gameState.selectedDomino === null) return;
+                
+                const currentTrainIndex = trainElements.findIndex(el => el.dataset.train === gameState.selectedTrain);
+                let newTrainIndex;
+                
+                if (e.key === 'ArrowUp') {
+                    newTrainIndex = currentTrainIndex <= 0 ? trainElements.length - 1 : currentTrainIndex - 1;
+                } else {
+                    newTrainIndex = currentTrainIndex >= trainElements.length - 1 ? 0 : currentTrainIndex + 1;
+                }
+                
+                if (trainElements[newTrainIndex]) {
+                    selectTrain(trainElements[newTrainIndex].dataset.train);
+                    trainElements[newTrainIndex].focus();
+                }
+            } 
+            else if (e.key === 'Enter' && gameState.selectedDomino !== null && gameState.selectedTrain !== null) {
+                e.preventDefault();
+                playDominoBtn.click();
+            }
+        });
+        
+        // Show rules dialog
+        function showRules() {
+            const rulesText = `Mexican Train Dominoes Rules:
+
+1. The game is played over 13 rounds, each using a different engine number (12 down to 0).
+2. Each player starts with a number of dominoes (15 in round 1, decreasing by 1 each round).
+3. The player with the engine double (e.g., [12|12] in round 1) starts by placing it on their train.
+4. Players take turns adding dominoes to any train that matches the end number.
+5. If you can't play, you must draw from the boneyard. If you still can't play, you pass and open your train.
+6. When a double is played, the next player must cover it with another domino.
+7. The Mexican train is a public train that anyone can start or play on.
+8. The round ends when one player runs out of dominoes or no one can play.
+9. Points are calculated based on the pip values of remaining dominoes.
+10. After 13 rounds, the player with the lowest total score wins.
+
+Tips:
+- Try to keep your train closed to prevent others from playing on it.
+- Play doubles strategically to force opponents to cover them.
+- Use the Mexican train when you can't play on your own train.`;
+            
+            alert(rulesText);
+        }
+        
+        // Initialize game
+        function initGame() {
+            addGameMessage("Starting new game... Shuffling and dealing dominoes.", 'system');
+            createDominoSet();
+            dealDominoes();
+            determineEngineNumber();
+            startGame();
+            updateUI();
+        }
+        
+        // Create a standard double-12 domino set
+        function createDominoSet() {
+            gameState.boneyard = [];
+            for (let i = 0; i <= 12; i++) {
+                for (let j = i; j <= 12; j++) {
+                    gameState.boneyard.push({ values: [i, j] });
+                }
+            }
+            shuffleArray(gameState.boneyard);
+        }
+        
+        // Shuffle array using Fisher-Yates algorithm
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+        
+        // Deal dominoes to players
+        function dealDominoes() {
+            let dominoesPerPlayer;
+            switch(gameState.round) {
+                case 1: dominoesPerPlayer = 15; break;
+                case 2: dominoesPerPlayer = 14; break;
+                case 3: dominoesPerPlayer = 13; break;
+                case 4: dominoesPerPlayer = 12; break;
+                case 5: dominoesPerPlayer = 11; break;
+                case 6: dominoesPerPlayer = 10; break;
+                case 7: dominoesPerPlayer = 9;  break;
+                case 8: dominoesPerPlayer = 8;  break;
+                case 9: dominoesPerPlayer = 7;  break;
+                case 10: dominoesPerPlayer = 6; break;
+                case 11: dominoesPerPlayer = 5; break;
+                case 12: dominoesPerPlayer = 4; break;
+                case 13: dominoesPerPlayer = 3; break;
+                default: dominoesPerPlayer = 10;
+            }
+            
+            gameState.players.forEach(player => {
+                player.hand = [];
+                for (let i = 0; i < dominoesPerPlayer; i++) {
+                    if (gameState.boneyard.length > 0) {
+                        player.hand.push(gameState.boneyard.pop());
+                    }
+                }
+            });
+        }
+        
+        // Determine the engine number (specific to current round)
+        function determineEngineNumber() {
+            // Fixed engine calculation: Round 1 = 12, Round 13 = 0
+            gameState.engineNumber = 12 - (gameState.round - 1);
+            
+            let enginePlayer = null;
+            let foundEngine = false;
+            
+            // Try to find the engine in player hands
+            gameState.players.forEach(player => {
+                player.hand.forEach((domino, index) => {
+                    if (!foundEngine && 
+                        domino.values[0] === gameState.engineNumber && 
+                        domino.values[1] === gameState.engineNumber) {
+                        enginePlayer = player;
+                        foundEngine = true;
+                    }
+                });
+            });
+            
+            if (foundEngine && enginePlayer) {
+                // Remove the engine domino from the player's hand and place it on their train
+                const engineIndex = enginePlayer.hand.findIndex(
+                    domino => domino.values[0] === gameState.engineNumber && domino.values[1] === gameState.engineNumber
+                );
+                
+                if (engineIndex !== -1) {
+                    const engineDomino = enginePlayer.hand.splice(engineIndex, 1)[0];
+                    enginePlayer.train.push(engineDomino);
+                    
+                    addGameMessage(`${enginePlayer.name} played the engine double [${gameState.engineNumber}|${gameState.engineNumber}]`, 'system');
+                }
+            } else if (gameState.strictEngine) {
+                // Strict rule: draw until someone gets the engine
+                addGameMessage(`No one has the engine double. Drawing until found...`, 'system');
+                
+                while (!foundEngine && gameState.boneyard.length > 0) {
+                    const randomPlayerIndex = Math.floor(Math.random() * gameState.players.length);
+                    const drawnDomino = gameState.boneyard.pop();
+                    
+                    if (drawnDomino.values[0] === gameState.engineNumber && 
+                        drawnDomino.values[1] === gameState.engineNumber) {
+                        enginePlayer = gameState.players[randomPlayerIndex];
+                        enginePlayer.train.push(drawnDomino);
+                        foundEngine = true;
+                        addGameMessage(`${enginePlayer.name} drew the engine double!`, 'system');
+                    } else {
+                        gameState.players[randomPlayerIndex].hand.push(drawnDomino);
+                    }
+                }
+                
+                if (!foundEngine) {
+                    // Fallback if engine not found in boneyard
+                    enginePlayer = gameState.players[Math.floor(Math.random() * gameState.players.length)];
+                    enginePlayer.train.push({ values: [gameState.engineNumber, gameState.engineNumber] });
+                    addGameMessage(`Engine not found in boneyard. ${enginePlayer.name} starts with engine [${gameState.engineNumber}|${gameState.engineNumber}]`, 'system');
+                }
+            } else {
+                // Auto seed: pick a random player to start with the engine
+                enginePlayer = gameState.players[Math.floor(Math.random() * gameState.players.length)];
+                enginePlayer.train.push({ values: [gameState.engineNumber, gameState.engineNumber] });
+                
+                // Remove the engine double from the boneyard if it exists
+                const engineIndex = gameState.boneyard.findIndex(domino => 
+                    domino.values[0] === gameState.engineNumber && domino.values[1] === gameState.engineNumber
+                );
+                if (engineIndex !== -1) {
+                    gameState.boneyard.splice(engineIndex, 1);
+                }
+                
+                addGameMessage(`No one had the engine double. ${enginePlayer.name} starts with engine [${gameState.engineNumber}|${gameState.engineNumber}]`, 'system');
+            }
+            
+            // Display the engine number
+            engineValueLeftEl.textContent = gameState.engineNumber;
+            engineValueRightEl.textContent = gameState.engineNumber;
+            roundIndicator.textContent = `Round ${gameState.round}/13`;
+        }
+        
+        // Get the end value of a train
+        function getTrainEndValue(train) {
+            if (train.length === 0) return null;
+            return train[train.length - 1].values[1];
+        }
+        
+        // Start the game
+        function startGame() {
+            gameState.gameStarted = true;
+            gameState.currentPlayerIndex = 0;
+            gameState.consecutivePasses = 0;
+            
+            // Set the first player as the one with the engine
+            gameState.players.forEach((player, index) => {
+                if (player.train.length > 0) {
+                    gameState.currentPlayerIndex = index;
+                }
+            });
+            
+            addGameMessage(`Round ${gameState.round} started! Engine number is ${gameState.engineNumber}`, 'system');
+            addGameMessage(`${gameState.players[gameState.currentPlayerIndex].name}'s turn`, 'system');
+            
+            if (gameState.players[gameState.currentPlayerIndex].isAI) {
+                makeAIMove(gameState.players[gameState.currentPlayerIndex].name);
+            } else {
+                enablePlayerControls();
+            }
+        }
+        
+        // Update the UI
+        function updateUI() {
+            updatePlayerHand();
+            updateTrains();
+            updatePlayerStatus();
+            updateControls();
+            updateDoubleCoverBanner();
+            updateCurrentPlayerHighlight();
+            updateScores();
+        }
+        
+        // Update scores display
+        function updateScores() {
+            scoresContainer.innerHTML = '';
+            
+            gameState.players.forEach((player, index) => {
+                const scoreItem = document.createElement('div');
+                scoreItem.className = 'score-item';
+                scoreItem.innerHTML = `<span>${player.name}:</span> <span>${gameState.totalScores[index]} points</span>`;
+                scoresContainer.appendChild(scoreItem);
+            });
+        }
+        
+        // Update current player highlight
+        function updateCurrentPlayerHighlight() {
+            // Remove current-player class from all players
+            document.querySelectorAll('.player-info').forEach(el => {
+                el.classList.remove('current-player');
+            });
+            
+            // Add current-player class to current player
+            document.getElementById(`player-${gameState.currentPlayerIndex}-info`).classList.add('current-player');
+        }
+        
+        // Update player hand display
+        function updatePlayerHand() {
+            // Clear existing dominoes
+            playerHandEl.innerHTML = '';
+            
+            // Create new domino elements
+            gameState.players[0].hand.forEach((domino, index) => {
+                const dominoEl = createDominoElement(domino);
+                dominoEl.dataset.index = index;
+                dominoEl.draggable = true; // Make domino draggable
+                dominoEl.tabIndex = 0; // Make focusable
+                
+                if (gameState.selectedDomino === index) {
+                    dominoEl.classList.add('selected');
+                }
+                
+                // Add click event listener
+                dominoEl.addEventListener('click', () => selectDomino(index));
+                
+                // Add drag event listeners
+                dominoEl.addEventListener('dragstart', handleDragStart);
+                dominoEl.addEventListener('dragend', handleDragEnd);
+                
+                // Add touch event listeners for mobile
+                dominoEl.addEventListener('touchstart', handleTouchStart, { passive: false });
+                dominoEl.addEventListener('touchmove', handleTouchMove, { passive: false });
+                dominoEl.addEventListener('touchend', handleTouchEnd, { passive: false });
+                
+                playerHandEl.appendChild(dominoEl);
+            });
+        }
+        
+        // Update train displays
+        function updateTrains() {
+            // Clear all trains
+            playerTrainEl.innerHTML = '';
+            zoeTrainEl.innerHTML = '';
+            alexTrainEl.innerHTML = '';
+            sophiaTrainEl.innerHTML = '';
+            mexicanTrainEl.innerHTML = '';
+            
+            // Populate player trains
+            gameState.players[0].train.forEach((domino, index) => {
+                const isLast = index === gameState.players[0].train.length - 1;
+                const dominoEl = createDominoElement(domino, 'player', isLast);
+                playerTrainEl.appendChild(dominoEl);
+            });
+            
+            gameState.players[1].train.forEach((domino, index) => {
+                const isLast = index === gameState.players[1].train.length - 1;
+                const dominoEl = createDominoElement(domino, 'zoe', isLast);
+                zoeTrainEl.appendChild(dominoEl);
+            });
+            
+            gameState.players[2].train.forEach((domino, index) => {
+                const isLast = index === gameState.players[2].train.length - 1;
+                const dominoEl = createDominoElement(domino, 'alex', isLast);
+                alexTrainEl.appendChild(dominoEl);
+            });
+            
+            gameState.players[3].train.forEach((domino, index) => {
+                const isLast = index === gameState.players[3].train.length - 1;
+                const dominoEl = createDominoElement(domino, 'sophia', isLast);
+                sophiaTrainEl.appendChild(dominoEl);
+            });
+            
+            // Populate Mexican train
+            gameState.mexicanTrain.forEach((domino, index) => {
+                const isLast = index === gameState.mexicanTrain.length - 1;
+                const dominoEl = createDominoElement(domino, 'mexican', isLast);
+                mexicanTrainEl.appendChild(dominoEl);
+            });
+            
+            // Update train markers
+            updateTrainMarkers();
+            
+            // Highlight trains that can be played on
+            highlightPlayableTrains();
+        }
+        
+        // Create a domino element
+        function createDominoElement(domino, trainType = null, isLast = false) {
+            const dominoEl = document.createElement('div');
+            dominoEl.className = 'domino';
+            dominoEl.setAttribute('aria-label', `Domino ${domino.values[0]} ${domino.values[1]}`);
+            
+            const half1 = document.createElement('div');
+            half1.className = 'domino-half';
+            half1.textContent = domino.values[0];
+            
+            const half2 = document.createElement('div');
+            half2.className = 'domino-half';
+            half2.textContent = domino.values[1];
+            
+            dominoEl.appendChild(half1);
+            dominoEl.appendChild(half2);
+            
+            // Highlight if this is the double that needs covering
+            if (isLast && trainType && gameState.doubleToCover && 
+                gameState.doubleToCover.trainType === trainType && 
+                domino.values[0] === domino.values[1] && 
+                domino.values[0] === gameState.doubleToCover.value) {
+                dominoEl.classList.add('double-cover');
+            }
+            
+            return dominoEl;
+        }
+        
+        // Update train markers to show which trains are open
+        function updateTrainMarkers() {
+            // Update marker dots
+            const playerMarker = document.getElementById('player-marker');
+            const zoeMarker = document.getElementById('zoe-marker');
+            const alexMarker = document.getElementById('alex-marker');
+            const sophiaMarker = document.getElementById('sophia-marker');
+            const mexicanMarker = document.getElementById('mexican-marker');
+            
+            playerMarker.style.background = gameState.players[0].isOpen ? '#f8c291' : 'transparent';
+            zoeMarker.style.background = gameState.players[1].isOpen ? '#f8c291' : 'transparent';
+            alexMarker.style.background = gameState.players[2].isOpen ? '#f8c291' : 'transparent';
+            sophiaMarker.style.background = gameState.players[3].isOpen ? '#f8c291' : 'transparent';
+            mexicanMarker.style.background = gameState.mexicanTrainStarted ? '#f8c291' : 'transparent';
+            
+            // Update status text
+            document.getElementById('player-train-status').textContent = gameState.players[0].isOpen ? 'Open' : 'Closed';
+            document.getElementById('zoe-train-status').textContent = gameState.players[1].isOpen ? 'Open' : 'Closed';
+            document.getElementById('alex-train-status').textContent = gameState.players[2].isOpen ? 'Open' : 'Closed';
+            document.getElementById('sophia-train-status').textContent = gameState.players[3].isOpen ? 'Open' : 'Closed';
+            
+            // Update status dots
+            document.getElementById('player-status-dot').classList.toggle('inactive', !gameState.players[0].isOpen);
+            document.getElementById('zoe-status-dot').classList.toggle('inactive', !gameState.players[1].isOpen);
+            document.getElementById('alex-status-dot').classList.toggle('inactive', !gameState.players[2].isOpen);
+            document.getElementById('sophia-status-dot').classList.toggle('inactive', !gameState.players[3].isOpen);
+        }
+        
+        // Update double cover banner
+        function updateDoubleCoverBanner() {
+            if (gameState.doubleToCover) {
+                doubleCoverBanner.style.display = 'block';
+                doubleValueEl.textContent = `[${gameState.doubleToCover.value}|${gameState.doubleToCover.value}]`;
+                
+                let trainName = '';
+                switch(gameState.doubleToCover.trainType) {
+                    case 'player': trainName = 'Your train'; break;
+                    case 'zoe': trainName = "Zoe's train"; break;
+                    case 'alex': trainName = "Alex's train"; break;
+                    case 'sophia': trainName = "Sophia's train"; break;
+                    case 'mexican': trainName = 'Mexican train'; break;
+                }
+                
+                doubleTrainEl.textContent = trainName;
+            } else {
+                doubleCoverBanner.style.display = 'none';
+            }
+        }
+        
+        // Highlight trains that can be played on
+        function highlightPlayableTrains() {
+            // Remove all highlights
+            document.querySelectorAll('.train-container').forEach(container => {
+                container.classList.remove('highlight');
+            });
+            
+            // Remove disabled class from all trains
+            document.querySelectorAll('.train-container').forEach(container => {
+                container.classList.remove('disabled');
+            });
+            
+            // If a double needs to be covered, highlight that train and disable others
+            if (gameState.doubleToCover) {
+                switch(gameState.doubleToCover.trainType) {
+                    case 'player':
+                        document.getElementById('player-train-container').classList.add('highlight');
+                        break;
+                    case 'zoe':
+                        document.getElementById('zoe-train-container').classList.add('highlight');
+                        break;
+                    case 'alex':
+                        document.getElementById('alex-train-container').classList.add('highlight');
+                        break;
+                    case 'sophia':
+                        document.getElementById('sophia-train-container').classList.add('highlight');
+                        break;
+                    case 'mexican':
+                        document.getElementById('mexican-train-container').classList.add('highlight');
+                        break;
+                }
+                
+                // Disable all other trains
+                document.querySelectorAll('.train-container').forEach(container => {
+                    if (container.dataset.train !== gameState.doubleToCover.trainType) {
+                        container.classList.add('disabled');
+                    }
+                });
+                
+                return;
+            }
+            
+            // If it's the player's turn and they have a domino selected, highlight playable trains
+            if (gameState.currentPlayerIndex === 0 && gameState.selectedDomino !== null) {
+                const domino = gameState.players[0].hand[gameState.selectedDomino];
+                
+                // Check own train
+                if (canPlayOnTrain(gameState.players[0], gameState.players[0].train, domino)) {
+                    document.getElementById('player-train-container').classList.add('highlight');
+                }
+                
+                // Check Mexican train
+                if (canPlayOnTrain(gameState.players[0], gameState.mexicanTrain, domino)) {
+                    document.getElementById('mexican-train-container').classList.add('highlight');
+                }
+                
+                // Check open opponent trains
+                if (gameState.players[1].isOpen && canPlayOnTrain(gameState.players[0], gameState.players[1].train, domino)) {
+                    document.getElementById('zoe-train-container').classList.add('highlight');
+                }
+                
+                if (gameState.players[2].isOpen && canPlayOnTrain(gameState.players[0], gameState.players[2].train, domino)) {
+                    document.getElementById('alex-train-container').classList.add('highlight');
+                }
+                
+                if (gameState.players[3].isOpen && canPlayOnTrain(gameState.players[0], gameState.players[3].train, domino)) {
+                    document.getElementById('sophia-train-container').classList.add('highlight');
+                }
+            }
+            
+            // Disable train containers when not player's turn
+            if (gameState.currentPlayerIndex !== 0) {
+                document.querySelectorAll('.train-container').forEach(container => {
+                    container.classList.add('disabled');
+                });
+            }
+        }
+        
+        // Update player status
+        function updatePlayerStatus() {
+            document.getElementById('player-status').textContent = `${gameState.players[0].hand.length} dominoes`;
+            document.getElementById('zoe-status').textContent = `${gameState.players[1].hand.length} dominoes`;
+            document.getElementById('alex-status').textContent = `${gameState.players[2].hand.length} dominoes`;
+            document.getElementById('sophia-status').textContent = `${gameState.players[3].hand.length} dominoes`;
+            
+            // Update boneyard count
+            boneyardCountEl.textContent = `Boneyard: ${gameState.boneyard.length}`;
+        }
+        
+        // Update control buttons
+        function updateControls() {
+            const modalStyle = getComputedStyle(gameOverModal);
+            const isModalVisible = modalStyle.display !== 'none';
+            
+            const isPlayerTurn = gameState.currentPlayerIndex === 0;
+            const hasSelectedDomino = gameState.selectedDomino !== null;
+            const hasSelectedTrain = gameState.selectedTrain !== null;
+            const hasPlayableMove = hasSelectedDomino && hasSelectedTrain && canPlaySelectedDomino();
+            
+            playDominoBtn.disabled = !isPlayerTurn || !hasPlayableMove || gameState.moveInProgress || isModalVisible;
+            drawBtn.disabled = !isPlayerTurn || hasPlayableMove || gameState.moveInProgress || isModalVisible || gameState.doubleToCover !== null;
+            
+            // Fixed pass button logic - enable when no moves available and boneyard is empty
+            const noMovesAvailable = !hasAnyPlayableMove(gameState.players[0]);
+            const boneyardEmpty = gameState.boneyard.length === 0;
+            const mustPass = noMovesAvailable && (boneyardEmpty || gameState.doubleToCover !== null);
+            
+            passBtn.disabled = !isPlayerTurn || hasPlayableMove || gameState.moveInProgress || isModalVisible || !mustPass;
+            
+            resetRoundBtn.disabled = isModalVisible;
+            newGameBtn.disabled = isModalVisible;
+            
+            updateHelperText();
+        }
+        
+        // Update helper text
+        function updateHelperText() {
+            if (gameState.doubleToCover) {
+                helperTextEl.textContent = "You must cover the double on the highlighted train";
+            } else if (gameState.currentPlayerIndex === 0) {
+                if (gameState.selectedDomino !== null && gameState.selectedTrain === null) {
+                    const domino = gameState.players[0].hand[gameState.selectedDomino];
+                    
+                    // Only include opponent trains if they're open
+                    const legalTrains = [];
+                    
+                    if (canPlayOnTrain(gameState.players[0], gameState.players[0].train, domino)) {
+                        legalTrains.push('your train');
+                    }
+                    
+                    if (canPlayOnTrain(gameState.players[0], gameState.mexicanTrain, domino)) {
+                        legalTrains.push('Mexican train');
+                    }
+                    
+                    if (gameState.players[1].isOpen && canPlayOnTrain(gameState.players[0], gameState.players[1].train, domino)) {
+                        legalTrains.push("Zoe's train");
+                    }
+                    
+                    if (gameState.players[2].isOpen && canPlayOnTrain(gameState.players[0], gameState.players[2].train, domino)) {
+                        legalTrains.push("Alex's train");
+                    }
+                    
+                    if (gameState.players[3].isOpen && canPlayOnTrain(gameState.players[0], gameState.players[3].train, domino)) {
+                        legalTrains.push("Sophia's train");
+                    }
+                    
+                    if (legalTrains.length > 0) {
+                        helperTextEl.textContent = `Select a train to play on: ${legalTrains.join(', ')}`;
+                    } else {
+                        helperTextEl.textContent = "This domino cannot be played on any train";
+                    }
+                } else if (gameState.selectedDomino === null && !hasAnyPlayableMove(gameState.players[0])) {
+                    if (gameState.boneyard.length === 0) {
+                        helperTextEl.textContent = "You have no playable moves and the boneyard is empty. You must pass.";
+                    } else {
+                        helperTextEl.textContent = "You have no playable moves. Draw from boneyard or pass.";
+                    }
+                } else {
+                    helperTextEl.textContent = "";
+                }
+            } else {
+                helperTextEl.textContent = "";
+            }
+        }
+        
+        // Touch event handlers for mobile drag and drop
+        function handleTouchStart(e) {
+            if (gameState.currentPlayerIndex !== 0) return;
+            
+            const touch = e.touches[0];
+            const dominoEl = e.target.closest('.domino');
+            const dominoIndex = parseInt(dominoEl.dataset.index);
+            
+            gameState.dragData.isDragging = false; // Don't start dragging immediately
+            gameState.dragData.dominoIndex = dominoIndex;
+            gameState.dragData.originalParent = dominoEl.parentNode;
+            gameState.dragData.originalNextSibling = dominoEl.nextSibling;
+            gameState.dragData.touchStartX = touch.clientX;
+            gameState.dragData.touchStartY = touch.clientY;
+            
+            const rect = dominoEl.getBoundingClientRect();
+            gameState.dragData.touchOffsetX = touch.clientX - rect.left;
+            gameState.dragData.touchOffsetY = touch.clientY - rect.top;
+            
+            e.preventDefault();
+        }
+        
+        function handleTouchMove(e) {
+            if (gameState.dragData.dominoIndex === null) return;
+            
+            const touch = e.touches[0];
+            const deltaX = Math.abs(touch.clientX - gameState.dragData.touchStartX);
+            const deltaY = Math.abs(touch.clientY - gameState.dragData.touchStartY);
+            
+            // Only start dragging if moved more than 15 pixels
+            if (!gameState.dragData.isDragging && (deltaX > 15 || deltaY > 15)) {
+                gameState.dragData.isDragging = true;
+                
+                // Hide the original domino
+                const originalDomino = document.querySelector(`[data-index="${gameState.dragData.dominoIndex}"]`);
+                if (originalDomino) {
+                    originalDomino.style.visibility = 'hidden';
+                }
+                
+                // Create a clone for dragging
+                const clone = originalDomino.cloneNode(true);
+                clone.style.position = 'fixed';
+                clone.style.zIndex = '1000';
+                clone.style.pointerEvents = 'none';
+                clone.style.opacity = '0.8';
+                clone.style.transform = 'rotate(5deg) scale(1.1)';
+                clone.id = 'drag-clone';
+                
+                document.body.appendChild(clone);
+                
+                // Position the clone
+                updateTouchClonePosition(touch);
+            }
+            
+            if (gameState.dragData.isDragging) {
+                const clone = document.getElementById('drag-clone');
+                
+                if (clone) {
+                    updateTouchClonePosition(touch);
+                    
+                    // Check which train is under the touch
+                    const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+                    const trainContainer = elementBelow?.closest('.train-container');
+                    
+                    // Remove drag-over from all trains
+                    document.querySelectorAll('.train-container').forEach(container => {
+                        container.classList.remove('drag-over');
+                    });
+                    
+                    if (trainContainer) {
+                        const trainType = trainContainer.dataset.train;
+                        const domino = gameState.players[0].hand[gameState.dragData.dominoIndex];
+                        
+                        // Check if this domino can be played on this train
+                        let canPlay = false;
+                        
+                        switch(trainType) {
+                            case 'player':
+                                canPlay = canPlayOnTrain(gameState.players[0], gameState.players[0].train, domino);
+                                break;
+                            case 'zoe':
+                                canPlay = gameState.players[1].isOpen && canPlayOnTrain(gameState.players[0], gameState.players[1].train, domino);
+                                break;
+                            case 'alex':
+                                canPlay = gameState.players[2].isOpen && canPlayOnTrain(gameState.players[0], gameState.players[2].train, domino);
+                                break;
+                            case 'sophia':
+                                canPlay = gameState.players[3].isOpen && canPlayOnTrain(gameState.players[0], gameState.players[3].train, domino);
+                                break;
+                            case 'mexican':
+                                canPlay = canPlayOnTrain(gameState.players[0], gameState.mexicanTrain, domino);
+                                break;
+                        }
+                        
+                        // If doubleToCover exists, only allow dropping on that train
+                        if (gameState.doubleToCover && trainType !== gameState.doubleToCover.trainType) {
+                            canPlay = false;
+                        }
+                        
+                        if (canPlay) {
+                            trainContainer.classList.add('drag-over');
+                        }
+                    }
+                }
+            }
+            
+            e.preventDefault();
+        }
+        
+        function handleTouchEnd(e) {
+            if (gameState.dragData.dominoIndex === null) return;
+            
+            const touch = e.changedTouches[0];
+            const clone = document.getElementById('drag-clone');
+            
+            // Restore the original domino
+            const originalDomino = document.querySelector(`[data-index="${gameState.dragData.dominoIndex}"]`);
+            if (originalDomino) {
+                originalDomino.style.visibility = 'visible';
+            }
+            
+            if (clone && gameState.dragData.isDragging) {
+                // Check which train is under the touch
+                const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+                const trainContainer = elementBelow?.closest('.train-container');
+                
+                // Remove drag-over from all trains
+                document.querySelectorAll('.train-container').forEach(container => {
+                    container.classList.remove('drag-over');
+                });
+                
+                if (trainContainer) {
+                    const trainType = trainContainer.dataset.train;
+                    const dominoIndex = gameState.dragData.dominoIndex;
+                    const domino = gameState.players[0].hand[dominoIndex];
+                    
+                    // Check if this domino can be played on this train
+                    let canPlay = false;
+                    
+                    switch(trainType) {
+                        case 'player':
+                            canPlay = canPlayOnTrain(gameState.players[0], gameState.players[0].train, domino);
+                            break;
+                        case 'zoe':
+                            canPlay = gameState.players[1].isOpen && canPlayOnTrain(gameState.players[0], gameState.players[1].train, domino);
+                            break;
+                        case 'alex':
+                            canPlay = gameState.players[2].isOpen && canPlayOnTrain(gameState.players[0], gameState.players[2].train, domino);
+                            break;
+                        case 'sophia':
+                            canPlay = gameState.players[3].isOpen && canPlayOnTrain(gameState.players[0], gameState.players[3].train, domino);
+                            break;
+                        case 'mexican':
+                            canPlay = canPlayOnTrain(gameState.players[0], gameState.mexicanTrain, domino);
+                            break;
+                    }
+                    
+                    // If doubleToCover exists, only allow dropping on that train
+                    if (gameState.doubleToCover && trainType !== gameState.doubleToCover.trainType) {
+                        canPlay = false;
+                    }
+                    
+                    if (canPlay) {
+                        // Select the domino and train, then play it
+                        gameState.selectedDomino = dominoIndex;
+                        gameState.selectedTrain = trainType;
+                        playSelectedDomino();
+                    } else {
+                        // Add a shake animation to indicate invalid move
+                        const dominoElements = document.querySelectorAll('.hand-dominoes .domino');
+                        if (dominoElements[dominoIndex]) {
+                            dominoElements[dominoIndex].classList.add('shake');
+                            setTimeout(() => {
+                                dominoElements[dominoIndex].classList.remove('shake');
+                            }, 500);
+                        }
+                        
+                        addGameMessage("Invalid move! That domino cannot be played on this train.", 'system');
+                    }
+                }
+                
+                // Remove the clone if it exists
+                if (clone && clone.parentNode) {
+                    document.body.removeChild(clone);
+                }
+            }
+            
+            // Always clean up any remaining drag clone
+            const remainingClone = document.getElementById('drag-clone');
+            if (remainingClone) {
+                document.body.removeChild(remainingClone);
+            }
+            
+            // Reset drag data
+            gameState.dragData.isDragging = false;
+            gameState.dragData.dominoIndex = null;
+            gameState.dragData.originalParent = null;
+            gameState.dragData.originalNextSibling = null;
+            gameState.dragData.touchStartX = 0;
+            gameState.dragData.touchStartY = 0;
+            
+            e.preventDefault();
+        }
+        
+        function updateTouchClonePosition(touch) {
+            const clone = document.getElementById('drag-clone');
+            if (clone) {
+                clone.style.left = (touch.clientX - gameState.dragData.touchOffsetX) + 'px';
+                clone.style.top = (touch.clientY - gameState.dragData.touchOffsetY) + 'px';
+            }
+        }
+        
+        // Drag and drop functions
+        function handleDragStart(e) {
+            if (gameState.currentPlayerIndex !== 0) return;
+            
+            const dominoIndex = parseInt(e.target.dataset.index);
+            gameState.dragData.isDragging = true;
+            gameState.dragData.dominoIndex = dominoIndex;
+            gameState.dragData.originalParent = e.target.parentNode;
+            gameState.dragData.originalNextSibling = e.target.nextSibling;
+            
+            e.target.classList.add('dragging');
+            
+            // Set drag data
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', e.target.innerHTML);
+        }
+        
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            
+            // Reset drag data
+            gameState.dragData.isDragging = false;
+            gameState.dragData.dominoIndex = null;
+            gameState.dragData.originalParent = null;
+            gameState.dragData.originalNextSibling = null;
+            
+            // Remove drag-over class from all trains
+            document.querySelectorAll('.train-container').forEach(container => {
+                container.classList.remove('drag-over');
+            });
+        }
+        
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault(); // Necessary to allow a drop
+            }
+            
+            e.dataTransfer.dropEffect = 'move';
+            
+            // If we're dragging a domino and it's the player's turn
+            if (gameState.dragData.isDragging && gameState.currentPlayerIndex === 0) {
+                // Don't show drag-over on disabled trains
+                if (e.currentTarget.classList.contains('disabled')) {
+                    return false;
+                }
+                
+                const trainType = e.currentTarget.dataset.train;
+                const domino = gameState.players[0].hand[gameState.dragData.dominoIndex];
+                
+                // Check if this domino can be played on this train
+                let canPlay = false;
+                let train = null;
+                
+                switch(trainType) {
+                    case 'player':
+                        train = gameState.players[0].train;
+                        canPlay = canPlayOnTrain(gameState.players[0], train, domino);
+                        break;
+                    case 'zoe':
+                        train = gameState.players[1].train;
+                        canPlay = gameState.players[1].isOpen && canPlayOnTrain(gameState.players[0], train, domino);
+                        break;
+                    case 'alex':
+                        train = gameState.players[2].train;
+                        canPlay = gameState.players[2].isOpen && canPlayOnTrain(gameState.players[0], train, domino);
+                        break;
+                    case 'sophia':
+                        train = gameState.players[3].train;
+                        canPlay = gameState.players[3].isOpen && canPlayOnTrain(gameState.players[0], train, domino);
+                        break;
+                    case 'mexican':
+                        train = gameState.mexicanTrain;
+                        canPlay = canPlayOnTrain(gameState.players[0], train, domino);
+                        break;
+                }
+                
+                // If doubleToCover exists, only allow dropping on that train
+                if (gameState.doubleToCover && trainType !== gameState.doubleToCover.trainType) {
+                    canPlay = false;
+                }
+                
+                if (canPlay) {
+                    e.currentTarget.classList.add('drag-over');
+                }
+            }
+            
+            return false;
+        }
+        
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+        
+        function handleDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation(); // Stops some browsers from redirecting.
+            }
+            
+            e.currentTarget.classList.remove('drag-over');
+            
+            // If we're dragging a domino and it's the player's turn
+            if (gameState.dragData.isDragging && gameState.currentPlayerIndex === 0) {
+                const trainType = e.currentTarget.dataset.train;
+                const dominoIndex = gameState.dragData.dominoIndex;
+                const domino = gameState.players[0].hand[dominoIndex];
+                
+                // Check if this domino can be played on this train
+                let canPlay = false;
+                let train = null;
+                
+                switch(trainType) {
+                    case 'player':
+                        train = gameState.players[0].train;
+                        canPlay = canPlayOnTrain(gameState.players[0], train, domino);
+                        break;
+                    case 'zoe':
+                        train = gameState.players[1].train;
+                        canPlay = gameState.players[1].isOpen && canPlayOnTrain(gameState.players[0], train, domino);
+                        break;
+                    case 'alex':
+                        train = gameState.players[2].train;
+                        canPlay = gameState.players[2].isOpen && canPlayOnTrain(gameState.players[0], train, domino);
+                        break;
+                    case 'sophia':
+                        train = gameState.players[3].train;
+                        canPlay = gameState.players[3].isOpen && canPlayOnTrain(gameState.players[0], train, domino);
+                        break;
+                    case 'mexican':
+                        train = gameState.mexicanTrain;
+                        canPlay = canPlayOnTrain(gameState.players[0], train, domino);
+                        break;
+                }
+                
+                // If doubleToCover exists, only allow dropping on that train
+                if (gameState.doubleToCover && trainType !== gameState.doubleToCover.trainType) {
+                    canPlay = false;
+                }
+                
+                if (canPlay) {
+                    // Select the domino and train, then play it
+                    gameState.selectedDomino = dominoIndex;
+                    gameState.selectedTrain = trainType;
+                    playSelectedDomino();
+                } else {
+                    // Add a shake animation to indicate invalid move
+                    const dominoElements = document.querySelectorAll('.hand-dominoes .domino');
+                    if (dominoElements[dominoIndex]) {
+                        dominoElements[dominoIndex].classList.add('shake');
+                        setTimeout(() => {
+                            dominoElements[dominoIndex].classList.remove('shake');
+                        }, 500);
+                    }
+                    
+                    addGameMessage("Invalid move! That domino cannot be played on this train.", 'system');
+                }
+            }
+            
+            return false;
+        }
+        
+        // Train click listeners
+        document.querySelectorAll('.train-container').forEach(container => {
+            container.addEventListener('click', () => {
+                if (gameState.currentPlayerIndex !== 0) return;
+                if (gameState.selectedDomino === null) return;
+                
+                const trainType = container.dataset.train;
+                
+                // If doubleToCover exists, only allow selecting that train
+                if (gameState.doubleToCover && trainType !== gameState.doubleToCover.trainType) {
+                    addGameMessage("You must cover the double on the highlighted train.", 'system');
+                    return;
+                }
+                
+                selectTrain(trainType);
+            });
+            
+            // Add drop event listeners for drag and drop
+            container.addEventListener('dragover', handleDragOver);
+            container.addEventListener('drop', handleDrop);
+            container.addEventListener('dragleave', handleDragLeave);
+        });
+        
+        // Select a domino from player's hand
+        function selectDomino(index) {
+            if (gameState.currentPlayerIndex !== 0) return;
+            
+            if (gameState.selectedDomino === index) {
+                gameState.selectedDomino = null;
+                gameState.selectedTrain = null;
+            } else {
+                gameState.selectedDomino = index;
+                
+                // Only include opponent trains if they're open
+                const legalTrains = ['player','zoe','alex','sophia','mexican'].filter(tt => {
+                    const t = tt === 'player' ? gameState.players[0].train :
+                             tt === 'zoe' ? gameState.players[1].train :
+                             tt === 'alex' ? gameState.players[2].train :
+                             tt === 'sophia' ? gameState.players[3].train :
+                             gameState.mexicanTrain;
+                    
+                    // For opponent trains, require isOpen
+                    if (tt === 'zoe' && !gameState.players[1].isOpen) return false;
+                    if (tt === 'alex' && !gameState.players[2].isOpen) return false;
+                    if (tt === 'sophia' && !gameState.players[3].isOpen) return false;
+                    
+                    return canPlayOnTrain(gameState.players[0], t, gameState.players[0].hand[index]);
+                });
+                
+                gameState.selectedTrain = legalTrains.length === 1 ? legalTrains[0] : null;
+                
+                // If no legal trains, show a message and shake the domino
+                if (legalTrains.length === 0) {
+                    addGameMessage("This domino cannot be played on any train", 'system');
+                    
+                    // Shake the selected domino for visual feedback
+                    setTimeout(() => {
+                        const dominoElements = document.querySelectorAll('.hand-dominoes .domino');
+                        if (dominoElements[index]) {
+                            dominoElements[index].classList.add('shake');
+                            setTimeout(() => {
+                                dominoElements[index].classList.remove('shake');
+                            }, 500);
+                        }
+                    }, 100);
+                }
+            }
+            
+            updateUI();
+        }
+        
+        // Select a train to play on
+        function selectTrain(trainType) {
+            if (gameState.currentPlayerIndex !== 0 || gameState.selectedDomino === null) return;
+            
+            let train = null;
+            let trainName = '';
+            
+            switch(trainType) {
+                case 'player':
+                    train = gameState.players[0].train;
+                    trainName = 'your';
+                    break;
+                case 'zoe':
+                    train = gameState.players[1].train;
+                    trainName = "Zoe's";
+                    // Check if opponent train is open
+                    if (!gameState.players[1].isOpen) {
+                        addGameMessage("You can't play on Zoe's train - it's closed!", 'system');
+                        return;
+                    }
+                    break;
+                case 'alex':
+                    train = gameState.players[2].train;
+                    trainName = "Alex's";
+                    // Check if opponent train is open
+                    if (!gameState.players[2].isOpen) {
+                        addGameMessage("You can't play on Alex's train - it's closed!", 'system');
+                        return;
+                    }
+                    break;
+                case 'sophia':
+                    train = gameState.players[3].train;
+                    trainName = "Sophia's";
+                    // Check if opponent train is open
+                    if (!gameState.players[3].isOpen) {
+                        addGameMessage("You can't play on Sophia's train - it's closed!", 'system');
+                        return;
+                    }
+                    break;
+                case 'mexican':
+                    train = gameState.mexicanTrain;
+                    trainName = 'Mexican';
+                    break;
+            }
+            
+            const domino = gameState.players[0].hand[gameState.selectedDomino];
+            
+            if (canPlayOnTrain(gameState.players[0], train, domino)) {
+                gameState.selectedTrain = trainType;
+                updateUI();
+            }
+        }
+        
+        // Check if the selected domino can be played
+        function canPlaySelectedDomino() {
+            if (gameState.selectedDomino === null || gameState.selectedTrain === null) return false;
+            
+            const domino = gameState.players[0].hand[gameState.selectedDomino];
+            let train = null;
+            
+            switch(gameState.selectedTrain) {
+                case 'player':
+                    train = gameState.players[0].train;
+                    break;
+                case 'zoe':
+                    train = gameState.players[1].train;
+                    // Check if opponent train is open
+                    if (!gameState.players[1].isOpen) return false;
+                    break;
+                case 'alex':
+                    train = gameState.players[2].train;
+                    // Check if opponent train is open
+                    if (!gameState.players[2].isOpen) return false;
+                    break;
+                case 'sophia':
+                    train = gameState.players[3].train;
+                    // Check if opponent train is open
+                    if (!gameState.players[3].isOpen) return false;
+                    break;
+                case 'mexican':
+                    train = gameState.mexicanTrain;
+                    break;
+            }
+            
+            // If a double needs to be covered, check if it can be played on that train
+            if (gameState.doubleToCover) {
+                return gameState.doubleToCover.trainType === gameState.selectedTrain && 
+                       canPlayOnTrain(gameState.players[0], train, domino);
+            }
+            
+            return canPlayOnTrain(gameState.players[0], train, domino);
+        }
+        
+        // Play the selected domino
+        function playSelectedDomino() {
+            if (gameState.selectedDomino === null || gameState.selectedTrain === null) return;
+            
+            const domino = gameState.players[0].hand[gameState.selectedDomino];
+            let targetTrain = null;
+            let trainType = '';
+            
+            switch(gameState.selectedTrain) {
+                case 'player':
+                    targetTrain = gameState.players[0].train;
+                    trainType = 'your';
+                    break;
+                case 'zoe':
+                    targetTrain = gameState.players[1].train;
+                    trainType = "Zoe's";
+                    // Double-check if opponent train is open
+                    if (!gameState.players[1].isOpen) {
+                        addGameMessage("You can't play on Zoe's train - it's closed!", 'system');
+                        return;
+                    }
+                    break;
+                case 'alex':
+                    targetTrain = gameState.players[2].train;
+                    trainType = "Alex's";
+                    // Double-check if opponent train is open
+                    if (!gameState.players[2].isOpen) {
+                        addGameMessage("You can't play on Alex's train - it's closed!", 'system');
+                        return;
+                    }
+                    break;
+                case 'sophia':
+                    targetTrain = gameState.players[3].train;
+                    trainType = "Sophia's";
+                    // Double-check if opponent train is open
+                    if (!gameState.players[3].isOpen) {
+                        addGameMessage("You can't play on Sophia's train - it's closed!", 'system');
+                        return;
+                    }
+                    break;
+                case 'mexican':
+                    targetTrain = gameState.mexicanTrain;
+                    trainType = 'Mexican';
+                    break;
+            }
+            
+            if (targetTrain && canPlayOnTrain(gameState.players[0], targetTrain, domino)) {
+                // Play the domino
+                playDomino(gameState.players[0], domino, targetTrain);
+                
+                // Add message
+                addGameMessage(`You played [${domino.values.join('|')}] on ${trainType} train`, 'system');
+                
+                // Clear selection
+                gameState.selectedDomino = null;
+                gameState.selectedTrain = null;
+                
+                // Reset consecutive passes counter
+                gameState.consecutivePasses = 0;
+                
+                // If it's a double, set it to be covered
+                if (domino.values[0] === domino.values[1]) {
+                    // Use trainType instead of train reference
+                    const trainTypeForDouble = targetTrain === gameState.players[0].train ? 'player' :
+                                              targetTrain === gameState.players[1].train ? 'zoe' :
+                                              targetTrain === gameState.players[2].train ? 'alex' :
+                                              targetTrain === gameState.players[3].train ? 'sophia' : 'mexican';
+                    
+                    gameState.doubleToCover = {
+                        value: domino.values[0],
+                        trainType: trainTypeForDouble
+                    };
+                    
+                    addGameMessage(`Double played! Next player must cover it.`, 'system');
+                }
+                
+                // Check if player has won
+                if (gameState.players[0].hand.length === 0) {
+                    endGame(gameState.players[0]);
+                    return;
+                }
+                
+                // Continue game flow
+                continueGameFlow();
+            }
+        }
+        
+        // Draw from boneyard
+        function drawFromBoneyard() {
+            if (gameState.boneyard.length > 0) {
+                const drawnDomino = gameState.boneyard.pop();
+                gameState.players[0].hand.push(drawnDomino);
+                
+                addGameMessage(`You drew a domino from the boneyard`, 'system');
+                
+                // Auto-select the drawn domino
+                gameState.selectedDomino = gameState.players[0].hand.length - 1;
+                
+                // Check if the drawn domino can be played specifically
+                updateUI();
+                
+                // Check specifically if the drawn domino is playable
+                const drawnDominoPlayable = canDominoBePlayedAnywhere(gameState.players[0], drawnDomino);
+                
+                if (drawnDominoPlayable) {
+                    addGameMessage(`The domino you drew can be played!`, 'system');
+                    
+                    // Auto-select single legal train for drawn domino
+                    // Only include opponent trains if they're open
+                    const legalTrains = ['player','zoe','alex','sophia','mexican'].filter(tt => {
+                        const t = tt === 'player' ? gameState.players[0].train :
+                                 tt === 'zoe' ? gameState.players[1].train :
+                                 tt === 'alex' ? gameState.players[2].train :
+                                 tt === 'sophia' ? gameState.players[3].train :
+                                 gameState.mexicanTrain;
+                        
+                        // For opponent trains, require isOpen
+                        if (tt === 'zoe' && !gameState.players[1].isOpen) return false;
+                        if (tt === 'alex' && !gameState.players[2].isOpen) return false;
+                        if (tt === 'sophia' && !gameState.players[3].isOpen) return false;
+                        
+                        return canPlayOnTrain(gameState.players[0], t, drawnDomino);
+                    });
+                    
+                    if (legalTrains.length === 1) {
+                        gameState.selectedTrain = legalTrains[0];
+                        updateUI();
+                    }
+                } else if (hasAnyPlayableMove(gameState.players[0])) {
+                    addGameMessage(`You now have a playable move in your hand.`, 'system');
+                } else {
+                    addGameMessage(`You still cannot play. You must pass.`, 'system');
+                    // Automatically pass if still can't play after drawing
+                    setTimeout(() => {
+                        passPlayerTurn();
+                    }, 1000);
+                }
+            } else {
+                addGameMessage(`Boneyard is empty. You must pass.`, 'system');
+                passPlayerTurn();
+            }
+        }
+        
+        // Check if a specific domino can be played anywhere
+        function canDominoBePlayedAnywhere(player, domino) {
+            // Check own train
+            if (canPlayOnTrain(player, player.train, domino)) return true;
+            // Check Mexican train
+            if (canPlayOnTrain(player, gameState.mexicanTrain, domino)) return true;
+            // Check open opponent trains
+            for (let otherPlayer of gameState.players) {
+                if (otherPlayer.name !== player.name && otherPlayer.isOpen) {
+                    if (canPlayOnTrain(player, otherPlayer.train, domino)) return true;
+                }
+            }
+            return false;
+        }
+        
+        // Pass player turn
+        function passPlayerTurn() {
+            gameState.players[0].hasPassed = true;
+            gameState.players[0].isBlocked = true;
+            gameState.players[0].isOpen = true;
+            gameState.consecutivePasses++;
+            
+            addGameMessage(`You passed your turn`, 'system');
+            
+            // Force immediate UI update for train markers and status
+            updateTrainMarkers();
+            updatePlayerStatus();
+            
+            continueGameFlow();
+        }
+        
+        // Enable player controls
+        function enablePlayerControls() {
+            updateUI();
+        }
+        
+        // Helper function to check if round should end
+        function shouldEndRound() {
+            if (gameState.doubleToCover) return false; // If there's a double to cover, continue
+            if (gameState.boneyard.length > 0) return false; // If boneyard has dominoes, continue
+            if (gameState.consecutivePasses < gameState.players.length) return false; // Not everyone passed
+            
+            // Check if any player has a playable move
+            for (let player of gameState.players) {
+                if (hasAnyPlayableMove(player)) return false;
+            }
+            
+            return true;
+        }
+        
+        // Continue game flow
+        function continueGameFlow() {
+            // Check if round should end
+            if (shouldEndRound()) {
+                endRound();
+                return;
+            }
+            
+            // If a double needs to be covered, next player must cover it
+            if (gameState.doubleToCover) {
+                const nextPlayerIndex = (gameState.currentPlayerIndex + 1) % gameState.players.length;
+                gameState.currentPlayerIndex = nextPlayerIndex;
+                
+                const nextPlayer = gameState.players[nextPlayerIndex];
+                addGameMessage(`${nextPlayer.name}'s turn to cover the double`, 'system');
+                
+                if (nextPlayer.isAI) {
+                    makeAIMove(nextPlayer.name);
+                } else {
+                    enablePlayerControls();
+                }
+            } else {
+                // Normal turn progression
+                const nextPlayerIndex = (gameState.currentPlayerIndex + 1) % gameState.players.length;
+                gameState.currentPlayerIndex = nextPlayerIndex;
+                
+                const nextPlayer = gameState.players[nextPlayerIndex];
+                addGameMessage(`${nextPlayer.name}'s turn`, 'system');
+                
+                if (nextPlayer.isAI) {
+                    makeAIMove(nextPlayer.name);
+                } else {
+                    enablePlayerControls();
+                }
+            }
+        }
+        
+        // AI Move Logic
+        function makeAIMove(playerName) {
+            const player = gameState.players.find(p => p.name === playerName);
+            if (!player || !player.isAI) return;
+            
+            // Prevent reentrancy by checking if a move is already in progress
+            if (gameState.moveInProgress) {
+                return;
+            }
+            
+            gameState.moveInProgress = true;
+            
+            // Use setTimeout to simulate thinking time and avoid UI blocking
+            const delay = 1000 + Math.random() * 1000;
+            setTimeout(() => {
+                try {
+                    // First priority: check if we need to cover a double
+                    if (gameState.doubleToCover) {
+                        handleCoveringDouble(player);
+                    } else {
+                        // Evaluate all possible moves
+                        const possibleMoves = evaluatePossibleMoves(player);
+                        
+                        if (possibleMoves.length > 0) {
+                            // Select move based on personality
+                            const selectedMove = selectMoveByPersonality(player, possibleMoves);
+                            executeMove(player, selectedMove);
+                        } else {
+                            // No moves available, draw from boneyard
+                            handleDrawingFromBoneyard(player);
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error in AI move:", error);
+                    // If there's an error, try to continue the game
+                    passAITurn(player);
+                } finally {
+                    gameState.moveInProgress = false;
+                    // Continue game flow after AI move completes
+                    continueGameFlow();
+                }
+            }, delay);
+        }
+        
+        // Handle covering a double
+        function handleCoveringDouble(player) {
+            let targetTrain = null;
+            
+            // Use trainType to find the correct train
+            switch(gameState.doubleToCover.trainType) {
+                case 'player':
+                    targetTrain = gameState.players[0].train;
+                    break;
+                case 'zoe':
+                    targetTrain = gameState.players[1].train;
+                    break;
+                case 'alex':
+                    targetTrain = gameState.players[2].train;
+                    break;
+                case 'sophia':
+                    targetTrain = gameState.players[3].train;
+                    break;
+                case 'mexican':
+                    targetTrain = gameState.mexicanTrain;
+                    break;
+            }
+            
+            const coveringDominoes = player.hand.filter(domino => 
+                canPlayOnTrain(player, targetTrain, domino)
+            );
+            
+            if (coveringDominoes.length > 0) {
+                const selectedDomino = selectDominoByPersonality(player, coveringDominoes);
+                playDomino(player, selectedDomino, targetTrain, true); // Add animation flag
+                
+                // Personality-based log message
+                logPersonalityMessage(player, `covering the double with [${selectedDomino.values.join('|')}]`);
+                
+                gameState.doubleToCover = null;
+                
+                // Force immediate UI update to ensure double-cover banner disappears
+                setTimeout(() => {
+                    updateDoubleCoverBanner();
+                }, 100);
+                
+                // Reset consecutive passes counter
+                gameState.consecutivePasses = 0;
+                
+                // Check if player has won
+                if (player.hand.length === 0) {
+                    endGame(player);
+                    return;
+                }
+                
+                // After covering a double, check if round should end
+                if (gameState.boneyard.length === 0) {
+                    const everyoneBlocked = gameState.players.every(p => !hasAnyPlayableMove(p));
+                    if (everyoneBlocked) {
+                        endRound();
+                        return;
+                    }
+                }
+            } else {
+                // Can't cover the double, must draw
+                if (gameState.boneyard.length > 0) {
+                    const drawnDomino = gameState.boneyard.pop();
+                    player.hand.push(drawnDomino);
+                    logPersonalityMessage(player, "drawing from the boneyard");
+                    
+                    // Check if the drawn domino can cover the double
+                    if (canPlayOnTrain(player, targetTrain, drawnDomino)) {
+                        // Play the drawn domino immediately
+                        playDomino(player, drawnDomino, targetTrain, true);
+                        logPersonalityMessage(player, `covering the double with the drawn domino [${drawnDomino.values.join('|')}]`);
+                        gameState.doubleToCover = null;
+                        
+                        // Check if player has won
+                        if (player.hand.length === 0) {
+                            endGame(player);
+                            return;
+                        }
+                    } else {
+                        // Still cannot cover, open the train and pass
+                        player.isOpen = true;
+                        player.hasPassed = true;
+                        player.isBlocked = true;
+                        gameState.consecutivePasses++;
+                        logPersonalityMessage(player, "passing after drawing and still unable to cover");
+                        
+                        // Force immediate UI update for train markers and status
+                        updateTrainMarkers();
+                        updatePlayerStatus();
+                        
+                        // Check if round should end
+                        if (shouldEndRound()) {
+                            endRound();
+                        }
+                    }
+                } else {
+                    // Boneyard is empty, cannot cover the double
+                    // DON'T remove the double - leave it on the train
+                    player.isOpen = true;
+                    player.hasPassed = true;
+                    player.isBlocked = true;
+                    gameState.consecutivePasses++;
+                    logPersonalityMessage(player, "passing (unable to cover double and boneyard empty)");
+                    
+                    // Force immediate UI update for train markers and status
+                    updateTrainMarkers();
+                    updatePlayerStatus();
+                    
+                    // Check if round should end after all players have passed
+                    if (shouldEndRound()) {
+                        endRound();
+                    }
+                }
+            }
+        }
+        
+        // Evaluate all possible moves across all trains
+        function evaluatePossibleMoves(player) {
+            const possibleMoves = [];
+            
+            // Check own train
+            if (canPlayOnTrain(player, player.train)) {
+                getPlayableDominoes(player, player.train).forEach(domino => {
+                    possibleMoves.push({
+                        domino: domino,
+                        train: player.train,
+                        trainType: 'own',
+                        value: calculateMoveValue(player, domino, player.train, 'own')
+                    });
+                });
+            }
+            
+            // Check Mexican train
+            if (canPlayOnTrain(player, gameState.mexicanTrain)) {
+                getPlayableDominoes(player, gameState.mexicanTrain).forEach(domino => {
+                    possibleMoves.push({
+                        domino: domino,
+                        train: gameState.mexicanTrain,
+                        trainType: 'mexican',
+                        value: calculateMoveValue(player, domino, gameState.mexicanTrain, 'mexican')
+                    });
+                });
+            }
+            
+            // Check open opponent trains
+            gameState.players.forEach(otherPlayer => {
+                if (otherPlayer.name !== player.name && otherPlayer.isOpen) {
+                    if (canPlayOnTrain(player, otherPlayer.train)) {
+                        getPlayableDominoes(player, otherPlayer.train).forEach(domino => {
+                            possibleMoves.push({
+                                domino: domino,
+                                train: otherPlayer.train,
+                                trainType: 'opponent',
+                                value: calculateMoveValue(player, domino, otherPlayer.train, 'opponent')
+                            });
+                        });
+                    }
+                }
+            });
+            
+            return possibleMoves;
+        }
+        
+        // Personality-based move selection
+        function selectMoveByPersonality(player, possibleMoves) {
+            // Sort moves by value (descending)
+            possibleMoves.sort((a, b) => b.value - a.value);
+            
+            // Introduce randomness based on difficulty
+            const randomFactor = 1 - gameState.aiDifficulty;
+            if (Math.random() < randomFactor) {
+                return possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+            }
+            
+            switch(player.name) {
+                case 'Zoe': // Aggressive
+                    // Prioritize own train and doubles
+                    const ownTrainMoves = possibleMoves.filter(m => m.trainType === 'own');
+                    const doubleMoves = possibleMoves.filter(m => m.domino.values[0] === m.domino.values[1]);
+                    
+                    if (ownTrainMoves.length > 0) {
+                        const ownTrainDoubles = ownTrainMoves.filter(m => m.domino.values[0] === m.domino.values[1]);
+                        if (ownTrainDoubles.length > 0) return ownTrainDoubles[0];
+                        return ownTrainMoves[0];
+                    }
+                    
+                    if (doubleMoves.length > 0) return doubleMoves[0];
+                    return possibleMoves[0];
+                    
+                case 'Alex': // Balanced
+                    // Already optimized by value calculation
+                    return possibleMoves[0];
+                    
+                case 'Sophia': // Cautious
+                    // Avoid doubles unless necessary
+                    const nonDoubleMoves = possibleMoves.filter(m => m.domino.values[0] !== m.domino.values[1]);
+                    
+                    if (nonDoubleMoves.length > 0) {
+                        // If blocked, prioritize opening opponent trains
+                        if (player.isBlocked) {
+                            const opponentMoves = nonDoubleMoves.filter(m => m.trainType === 'opponent');
+                            if (opponentMoves.length > 0) return opponentMoves[0];
+                        }
+                        return nonDoubleMoves[0];
+                    }
+                    
+                    return possibleMoves[0];
+            }
+        }
+        
+        // Calculate move value based on multiple factors
+        function calculateMoveValue(player, domino, train, trainType) {
+            let value = 0;
+            
+            // Base value is negative pip count (lower is better)
+            value -= (domino.values[0] + domino.values[1]);
+            
+            // Bonus for playing on own train
+            if (trainType === 'own') value += 10;
+            
+            // Personality-based double preference
+            if (domino.values[0] === domino.values[1]) {
+                switch(player.name) {
+                    case 'Zoe': value += 15; break;  // Loves doubles
+                    case 'Alex': value += 5; break;   // Neutral
+                    case 'Sophia': value -= 5; break; // Avoids doubles
+                }
+            }
+            
+            // Bonus for opening opponent trains when blocked
+            if (player.isBlocked && trainType === 'opponent') value += 20;
+            
+            // Bonus for moves that leave more options
+            const remainingHand = player.hand.filter(d => d !== domino);
+            value += countFutureOptions(remainingHand);
+            
+            return value;
+        }
+        
+        // Count future options with remaining hand
+        function countFutureOptions(hand) {
+            const values = {};
+            
+            // Count occurrences of each value
+            hand.forEach(domino => {
+                values[domino.values[0]] = (values[domino.values[0]] || 0) + 1;
+                if (domino.values[0] !== domino.values[1]) {
+                    values[domino.values[1]] = (values[domino.values[1]] || 0) + 1;
+                }
+            });
+            
+            // More unique values means more options
+            return Object.keys(values).length;
+        }
+        
+        // Handle drawing from boneyard
+        function handleDrawingFromBoneyard(player) {
+            if (gameState.boneyard.length > 0) {
+                const drawnDomino = gameState.boneyard.pop();
+                player.hand.push(drawnDomino);
+                
+                logPersonalityMessage(player, "drawing from the boneyard");
+                
+                // Check if drawn domino can be played
+                const possibleMoves = evaluatePossibleMoves(player);
+                if (possibleMoves.length > 0) {
+                    // Play the drawn domino immediately
+                    const selectedMove = selectMoveByPersonality(player, possibleMoves);
+                    executeMove(player, selectedMove);
+                } else {
+                    // Pass turn if still can't play
+                    passAITurn(player);
+                }
+            } else {
+                passAITurn(player);
+            }
+        }
+        
+        // Execute a move
+        function executeMove(player, move) {
+            playDomino(player, move.domino, move.train, true); // Add animation flag
+            
+            // Reset consecutive passes counter
+            gameState.consecutivePasses = 0;
+            
+            // If it's a double, set it to be covered
+            if (move.domino.values[0] === move.domino.values[1]) {
+                // Use trainType instead of train reference
+                const trainTypeForDouble = move.train === gameState.players[0].train ? 'player' :
+                                          move.train === gameState.players[1].train ? 'zoe' :
+                                          move.train === gameState.players[2].train ? 'alex' :
+                                          move.train === gameState.players[3].train ? 'sophia' : 'mexican';
+                
+                gameState.doubleToCover = {
+                    value: move.domino.values[0],
+                    trainType: trainTypeForDouble
+                };
+                
+                logPersonalityMessage(player, `playing a double [${move.domino.values.join('|')}] on ${move.trainType} train`);
+                
+                // Check if player has won
+                if (player.hand.length === 0) {
+                    endGame(player);
+                }
+            } else {
+                logPersonalityMessage(player, `playing [${move.domino.values.join('|')}] on ${move.trainType} train`);
+                
+                // Check if player has won
+                if (player.hand.length === 0) {
+                    endGame(player);
+                }
+            }
+        }
+        
+        // Pass AI turn
+        function passAITurn(player) {
+            player.hasPassed = true;
+            player.isBlocked = true;
+            player.isOpen = true;
+            gameState.consecutivePasses++;
+            
+            logPersonalityMessage(player, "passing");
+            
+            // Force immediate UI update for train markers and status
+            updateTrainMarkers();
+            updatePlayerStatus();
+        }
+        
+        // Personality-based messages
+        function logPersonalityMessage(player, action) {
+            let message = "";
+            
+            switch(player.name) {
+                case 'Zoe':
+                    const zoeMessages = [
+                        `Zoe: 'Watch and learn. I'm ${action}.'`,
+                        `Zoe: 'Too easy! ${action.charAt(0).toUpperCase() + action.slice(1)}.'`,
+                        `Zoe: 'I'm on fire! ${action.charAt(0).toUpperCase() + action.slice(1)}.'`
+                    ];
+                    message = zoeMessages[Math.floor(Math.random() * zoeMessages.length)];
+                    break;
+                    
+                case 'Alex':
+                    const alexMessages = [
+                        `Alex: 'Let me calculate... ${action}.'`,
+                        `Alex: 'Optimal move: ${action.charAt(0).toUpperCase() + action.slice(1)}.'`,
+                        `Alex: 'Statistics favor ${action}.'`
+                    ];
+                    message = alexMessages[Math.floor(Math.random() * alexMessages.length)];
+                    break;
+                    
+                case 'Sophia':
+                    const sophiaMessages = [
+                        `Sophia: 'Careful analysis leads me to ${action}.'`,
+                        `Sophia: 'Prudence dictates ${action}.'`,
+                        `Sophia: 'A logical choice: ${action}.'`
+                    ];
+                    message = sophiaMessages[Math.floor(Math.random() * sophiaMessages.length)];
+                    break;
+            }
+            
+            addGameMessage(message, player.name.toLowerCase());
+        }
+        
+        // Check if a domino can be played on a train
+        function canPlayOnTrain(player, train, specificDomino = null) {
+            // If the train is empty, check if we can start it with the engine number
+            if (train.length === 0) {
+                const dominoesToCheck = specificDomino ? [specificDomino] : player.hand;
+                return dominoesToCheck.some(domino => 
+                    domino.values[0] === gameState.engineNumber || domino.values[1] === gameState.engineNumber
+                );
+            }
+            
+            // Use getTrainEndValue for consistency
+            const trainEnd = getTrainEndValue(train);
+            const dominoesToCheck = specificDomino ? [specificDomino] : player.hand;
+            return dominoesToCheck.some(domino => 
+                domino.values[0] === trainEnd || domino.values[1] === trainEnd
+            );
+        }
+        
+        // Get all dominoes that can be played on a train
+        function getPlayableDominoes(player, train) {
+            if (train.length === 0) {
+                return player.hand.filter(domino => 
+                    domino.values[0] === gameState.engineNumber || domino.values[1] === gameState.engineNumber
+                );
+            }
+            
+            // Use getTrainEndValue for consistency
+            const trainEnd = getTrainEndValue(train);
+            return player.hand.filter(domino => 
+                domino.values[0] === trainEnd || domino.values[1] === trainEnd
+            );
+        }
+        
+        // Select a domino based on personality
+        function selectDominoByPersonality(player, dominoes) {
+            if (dominoes.length === 1) return dominoes[0];
+            
+            switch(player.name) {
+                case 'Zoe':
+                    // Zoe prefers high-value dominoes
+                    return dominoes.reduce((highest, current) => 
+                        (current.values[0] + current.values[1]) > (highest.values[0] + highest.values[1]) 
+                            ? current : highest
+                    );
+                    
+                case 'Alex':
+                    // Alex prefers low pip count
+                    return dominoes.reduce((lowest, current) => 
+                        (current.values[0] + current.values[1]) < (lowest.values[0] + lowest.values[1]) 
+                            ? current : lowest
+                    );
+                    
+                case 'Sophia':
+                    // Sophia prefers balanced dominoes
+                    return dominoes.reduce((mostBalanced, current) => {
+                        const currentDiff = Math.abs(current.values[0] - current.values[1]);
+                        const balancedDiff = Math.abs(mostBalanced.values[0] - mostBalanced.values[1]);
+                        return currentDiff < balancedDiff ? current : mostBalanced;
+                    });
+                    
+                default:
+                    return dominoes[0];
+            }
+        }
+        
+        // Play a domino on a train
+        function playDomino(player, domino, train, animate = false) {
+            // Remove domino from player's hand
+            const dominoIndex = player.hand.indexOf(domino);
+            if (dominoIndex !== -1) {
+                player.hand.splice(dominoIndex, 1);
+            }
+            
+            // Create a copy to avoid mutating the original
+            let dominoToPlay = { ...domino };
+            
+            // Ensure consistent orientation for empty train
+            if (train.length === 0) {
+                // If one of the sides equals engine, make that the first value
+                if (dominoToPlay.values[1] === gameState.engineNumber && dominoToPlay.values[0] !== gameState.engineNumber) {
+                    dominoToPlay.values = [dominoToPlay.values[1], dominoToPlay.values[0]];
+                }
+            } else {
+                // If the train is not empty, we need to check the current end and rotate the domino if necessary
+                // Use getTrainEndValue for consistency
+                const trainEnd = getTrainEndValue(train);
+                
+                // Validate that the domino can be legally played
+                if (dominoToPlay.values[0] !== trainEnd && dominoToPlay.values[1] !== trainEnd) {
+                    console.error(`Illegal play attempted: domino [${dominoToPlay.values.join('|')}] cannot be played on train ending with ${trainEnd}`);
+                    return;
+                }
+                
+                if (dominoToPlay.values[0] !== trainEnd && dominoToPlay.values[1] === trainEnd) {
+                    // Rotate the domino: swap the values
+                    dominoToPlay.values = [dominoToPlay.values[1], dominoToPlay.values[0]];
+                }
+            }
+            
+            // Add domino to train
+            train.push(dominoToPlay);
+            
+            // If playing on own train, close it and clear blocked state
+            if (train === player.train) {
+                player.isOpen = false;
+                player.isBlocked = false; // Unblock on any own-train play
+            }
+            
+            // If it's the first domino on the Mexican train, mark it as started
+            if (train === gameState.mexicanTrain && train.length === 1) {
+                gameState.mexicanTrainStarted = true;
+            }
+            
+            // Play sound effect
+            if (domino.values[0] === domino.values[1]) {
+                playSound('double');
+            } else {
+                playSound('play');
+            }
+            
+            // Update UI
+            updateUI();
+            
+            // Add animation for AI moves
+            if (animate && player.isAI && !prefersReducedMotion) {
+                // Find the last domino in the train and add animation
+                setTimeout(() => {
+                    const trainContainers = {
+                        'player': playerTrainEl,
+                        'zoe': zoeTrainEl,
+                        'alex': alexTrainEl,
+                        'sophia': sophiaTrainEl,
+                        'mexican': mexicanTrainEl
+                    };
+                    
+                    let trainEl;
+                    if (train === player.train) {
+                        trainEl = trainContainers['player'];
+                    } else if (train === gameState.players[1].train) {
+                        trainEl = trainContainers['zoe'];
+                    } else if (train === gameState.players[2].train) {
+                        trainEl = trainContainers['alex'];
+                    } else if (train === gameState.players[3].train) {
+                        trainEl = trainContainers['sophia'];
+                    } else if (train === gameState.mexicanTrain) {
+                        trainEl = trainContainers['mexican'];
+                    }
+                    
+                    if (trainEl && trainEl.lastElementChild) {
+                        trainEl.lastElementChild.classList.add('ai-play');
+                    }
+                }, 100);
+            }
+        }
+        
+        // Check if player has any playable move
+        function hasAnyPlayableMove(player) {
+            // Check own train
+            if (canPlayOnTrain(player, player.train)) return true;
+            // Check Mexican train
+            if (canPlayOnTrain(player, gameState.mexicanTrain)) return true;
+            // Check open opponent trains
+            for (let otherPlayer of gameState.players) {
+                if (otherPlayer.name !== player.name && otherPlayer.isOpen) {
+                    if (canPlayOnTrain(player, otherPlayer.train)) return true;
+                }
+            }
+            return false;
+        }
+        
+        // Add a game message to the log
+        function addGameMessage(message, type = 'system') {
+            const messageEl = document.createElement('div');
+            messageEl.className = `message ${type}`;
+            messageEl.textContent = message;
+            messageLogEl.appendChild(messageEl);
+            messageLogEl.scrollTop = messageLogEl.scrollHeight;
+        }
+        
+        // Calculate round scores
+        function calculateRoundScores() {
+            return gameState.players.map(player => {
+                const dominoCount = player.hand.length;
+                let score = 0;
+                
+                // Calculate pip sum of remaining dominoes
+                player.hand.forEach(domino => {
+                    score += domino.values[0] + domino.values[1];
+                });
+                
+                return { 
+                    name: player.name, 
+                    dominoCount, 
+                    score 
+                };
+            });
+        }
+        
+        // Sanitize HTML
+        function sanitizeHTML(str) {
+            const temp = document.createElement('div');
+            temp.textContent = str;
+            return temp.innerHTML;
+        }
+        
+        // Consolidated function to finish a round
+        function finishRound(winner = null) {
+            const playerScores = calculateRoundScores();
+            
+            // Store round scores
+            const roundScoreArray = playerScores.map(p => p.score);
+            gameState.roundScores.push(roundScoreArray);
+            
+            // Update total scores
+            gameState.players.forEach((player, index) => {
+                gameState.totalScores[index] += playerScores[index].score;
+            });
+            
+            // If no winner passed, determine by lowest score
+            if (!winner) {
+                const sortedScores = [...playerScores].sort((a, b) => a.score - b.score);
+                winner = sortedScores[0];
+            }
+            
+            gameOverTitle.textContent = `${winner.name} Wins Round ${gameState.round}!`;
+            gameOverMessage.innerHTML = playerScores.map(p => 
+                `<div>${sanitizeHTML(p.name)}: ${p.dominoCount} dominoes left (${p.score} points)</div>`
+            ).join('');
+            
+            // Check if this is the final round
+            if (gameState.round >= 13) {
+                // Show final scoreboard
+                finalScoreboard.style.display = 'block';
+                finalScoresContainer.innerHTML = '';
+                
+                // Sort players by total score (lowest wins)
+                const sortedPlayers = gameState.players.map((player, index) => ({
+                    name: player.name,
+                    score: gameState.totalScores[index]
+                })).sort((a, b) => a.score - b.score);
+                
+                // Find the minimum score
+                const minScore = sortedPlayers[0].score;
+                
+                // Display final scores
+                sortedPlayers.forEach((player, index) => {
+                    const scoreItem = document.createElement('div');
+                    // Mark all players with the minimum score as winners
+                    if (player.score === minScore) {
+                        scoreItem.className = 'final-score-item winner';
+                    } else {
+                        scoreItem.className = 'final-score-item';
+                    }
+                    scoreItem.innerHTML = `
+                        <span>${index + 1}. ${player.name}</span>
+                        <span>${player.score} points</span>
+                    `;
+                    finalScoresContainer.appendChild(scoreItem);
+                });
+                
+                // Populate score history table
+                populateScoreHistory();
+                
+                gameOverTitle.textContent = 'Game Over!';
+                gameState.gameCompleted = true;
+            }
+            
+            gameOverModal.style.display = 'flex';
+            
+            addGameMessage(`Round ${gameState.round} over! ${winner.name} wins!`, 'system');
+            
+            // Disable all buttons when game ends
+            updateControls();
+        }
+        
+        // Populate score history table
+        function populateScoreHistory() {
+            scoreHistoryBody.innerHTML = '';
+            
+            // Clear existing headers
+            scoreHistoryHeaders.innerHTML = '';
+            
+            // Add Player header
+            const playerHeader = document.createElement('th');
+            playerHeader.textContent = 'Player';
+            scoreHistoryHeaders.appendChild(playerHeader);
+            
+            // Add round headers dynamically
+            for (let i = 0; i < gameState.roundScores.length; i++) {
+                const th = document.createElement('th');
+                th.textContent = `R${i + 1}`;
+                scoreHistoryHeaders.appendChild(th);
+            }
+            
+            // Add Total header
+            const totalHeader = document.createElement('th');
+            totalHeader.textContent = 'Total';
+            scoreHistoryHeaders.appendChild(totalHeader);
+            
+            gameState.players.forEach((player, playerIndex) => {
+                const row = document.createElement('tr');
+                
+                // Player name cell
+                const nameCell = document.createElement('td');
+                nameCell.textContent = player.name;
+                nameCell.style.fontWeight = 'bold';
+                row.appendChild(nameCell);
+                
+                // Round score cells
+                for (let round = 0; round < gameState.roundScores.length; round++) {
+                    const scoreCell = document.createElement('td');
+                    scoreCell.textContent = gameState.roundScores[round][playerIndex];
+                    row.appendChild(scoreCell);
+                }
+                
+                // Total score cell
+                const totalCell = document.createElement('td');
+                totalCell.textContent = gameState.totalScores[playerIndex];
+                totalCell.style.fontWeight = 'bold';
+                row.appendChild(totalCell);
+                
+                scoreHistoryBody.appendChild(row);
+            });
+        }
+        
+        // End the game
+        function endGame(winner) {
+            // Check if there's a double to cover - if so, end the round only if the player has no dominoes
+            if (gameState.doubleToCover && winner.hand.length === 0) {
+                finishRound(winner);
+            } else if (!gameState.doubleToCover) {
+                finishRound(winner);
+            }
+        }
+        
+        // End the round when all players pass and boneyard is empty
+        function endRound() {
+            finishRound();
+        }
+        
+        // Reset current round
+        function resetCurrentRound() {
+            if (confirm('Are you sure you want to reset the current round?')) {
+                startNewRound();
+            }
+        }
+        
+        // Toggle sound
+        function toggleSound() {
+            gameState.soundEnabled = !gameState.soundEnabled;
+            soundToggleBtn.textContent = gameState.soundEnabled ? '🔊 Sound On' : '🔇 Sound Off';
+        }
+        
+        // Sound functions
+        function playSound(soundName) {
+            if (!gameState.soundEnabled) return;
+            
+            // Create audio context for sound effects
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Different sounds for different actions
+                switch(soundName) {
+                    case 'play':
+                        playTone(audioContext, 440, 0.1, 'sine'); // A4 note
+                        break;
+                    case 'draw':
+                        playTone(audioContext, 330, 0.1, 'triangle'); // E4 note
+                        break;
+                    case 'pass':
+                        playTone(audioContext, 220, 0.2, 'sawtooth'); // A3 note
+                        break;
+                    case 'double':
+                        playTone(audioContext, 880, 0.2, 'square'); // A5 note
+                        break;
+                    case 'win':
+                        playMelody(audioContext, [440, 554, 659, 880], 0.15); // A major chord
+                        break;
+                }
+            } catch (e) {
+                console.log('Audio not supported');
+            }
+        }
+        
+        function playTone(audioContext, frequency, duration, type = 'sine') {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.type = type;
+            oscillator.frequency.value = frequency;
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration);
+        }
+        
+        function playMelody(audioContext, frequencies, noteDuration) {
+            frequencies.forEach((freq, index) => {
+                setTimeout(() => {
+                    playTone(audioContext, freq, noteDuration);
+                }, index * noteDuration * 1000);
+            });
+        }
+        
+        // Dialog accessibility functions
+        function openDialog(dialogEl) {
+            const prevActiveElement = document.activeElement;
+            
+            // Store the previously focused element
+            dialogEl.dataset.prevFocus = prevActiveElement ? prevActiveElement.id || 'focus-prev' : '';
+            
+            // Show dialog
+            dialogEl.style.display = 'flex';
+            dialogEl.setAttribute('aria-modal', 'true');
+            dialogEl.setAttribute('role', 'dialog');
+            dialogEl.setAttribute('aria-labelledby', 'confirm-message');
+            
+            // Focus management
+            const focusableElements = dialogEl.querySelectorAll('button, [href], [tabindex]:not([tabindex="-1"])');
+            const firstFocusableElement = focusableElements[0];
+            const lastFocusableElement = focusableElements[focusableElements.length - 1];
+            
+            // Focus the first element
+            (firstFocusableElement || dialogEl).focus();
+            
+            // Create focus trap
+            const focusTrap = function(e) {
+                if (e.key === 'Escape') {
+                    closeDialog(dialogEl);
+                    return;
+                }
+                
+                if (e.key === 'Tab') {
+                    if (e.shiftKey && document.activeElement === firstFocusableElement) {
+                        e.preventDefault();
+                        (lastFocusableElement || firstFocusableElement).focus();
+                    } else if (!e.shiftKey && document.activeElement === lastFocusableElement) {
+                        e.preventDefault();
+                        (firstFocusableElement || lastFocusableElement).focus();
+                    }
+                }
+            };
+            
+            // Store the trap function for later removal
+            dialogEl._focusTrap = focusTrap;
+            document.addEventListener('keydown', focusTrap);
+        }
+        
+        function closeDialog(dialogEl) {
+            dialogEl.style.display = 'none';
+            
+            // Remove event listener
+            if (dialogEl._focusTrap) {
+                document.removeEventListener('keydown', dialogEl._focusTrap);
+            }
+            
+            // Restore focus
+            const prevFocusId = dialogEl.dataset.prevFocus;
+            if (prevFocusId && prevFocusId !== 'focus-prev') {
+                const prevElement = document.getElementById(prevFocusId);
+                if (prevElement) {
+                    prevElement.focus();
+                }
+            } else {
+                document.body.focus();
+            }
+        }
+        
+        // Start a new round
+        function startNewRound() {
+            // If we've completed 13 rounds, show final results
+            if (gameState.round >= 13) {
+                // Game is completed, show final results
+                gameState.gameCompleted = true;
+                finishRound();
+                return;
+            }
+            
+            // Reset game state for new round
+            gameState.players.forEach(player => {
+                player.hand = [];
+                player.train = [];
+                player.isOpen = false;
+                player.hasPassed = false;
+                player.isBlocked = false;
+            });
+            
+            gameState.boneyard = [];
+            gameState.mexicanTrain = [];
+            gameState.doubleToCover = null;
+            gameState.gameStarted = false;
+            gameState.selectedDomino = null;
+            gameState.selectedTrain = null;
+            gameState.consecutivePasses = 0;
+            gameState.mexicanTrainStarted = false;
+            gameState.moveInProgress = false;
+            gameState.pendingPlay = null;
+            
+            // Clear message log
+            messageLogEl.innerHTML = '';
+            
+            // Initialize new round
+            initGame();
+        }
+        
+        // Start a new game
+        function startNewGame() {
+            // Reset all game state
+            gameState.players.forEach(player => {
+                player.hand = [];
+                player.train = [];
+                player.isOpen = false;
+                player.hasPassed = false;
+                player.isBlocked = false;
+                player.score = 0;
+            });
+            
+            gameState.boneyard = [];
+            gameState.mexicanTrain = [];
+            gameState.doubleToCover = null;
+            gameState.engineNumber = 12;
+            gameState.gameStarted = false;
+            gameState.selectedDomino = null;
+            gameState.selectedTrain = null;
+            gameState.consecutivePasses = 0;
+            gameState.mexicanTrainStarted = false;
+            gameState.moveInProgress = false;
+            gameState.pendingPlay = null;
+            gameState.round = 1;
+            gameState.totalScores = [0, 0, 0, 0];
+            gameState.roundScores = [[0, 0, 0, 0]];
+            gameState.gameCompleted = false;
+            
+            // Hide final scoreboard
+            finalScoreboard.style.display = 'none';
+            
+            // Clear message log
+            messageLogEl.innerHTML = '';
+            
+            // Initialize new game
+            initGame();
+        }
+        
+        // Initialize the game when the page loads
+        window.onload = function() {
+            // Create drag-clone element if it doesn't exist
+            if (!document.getElementById('drag-clone')) {
+                const d = document.createElement('div');
+                d.id = 'drag-clone';
+                d.style.position = 'fixed';
+                d.style.left = '-9999px';
+                d.style.top = '-9999px';
+                d.style.pointerEvents = 'none';
+                d.style.display = 'none';
+                document.body.appendChild(d);
+            }
+            
+            startNewGame();
+        };
+    </script>
+</body>
+</html>
